@@ -820,7 +820,6 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
 
         for (Contato c : listaContatos) {
             tabela.addRow(new Object[]{
-                c.getId(),
                 c.getTelefone(),
                 c.getEmail(),
                 c.isAtivo() ? "Sim" : "Não"
