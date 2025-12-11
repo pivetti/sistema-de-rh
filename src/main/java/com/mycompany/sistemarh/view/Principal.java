@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
@@ -28,6 +29,8 @@ public class Principal extends javax.swing.JFrame {
     private static final DepartamentoDAO dDAO = new DepartamentoDAO();
     private static final CargoDAO cargoDAO = new CargoDAO();
     private static final FuncionarioDAO fDAO = new FuncionarioDAO();
+    private Integer idDepartamentoEdicao = null;
+    private Integer idCargoEdicao = null;
       
 
     public Principal() throws SQLException {
@@ -125,9 +128,21 @@ public class Principal extends javax.swing.JFrame {
             Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.String.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tblDep.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblDepMouseClicked(evt);
             }
         });
         jScrollPane2.setViewportView(tblDep);
@@ -247,9 +262,21 @@ public class Principal extends javax.swing.JFrame {
             Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tblCargo.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblCargoMouseClicked(evt);
             }
         });
         jScrollPane3.setViewportView(tblCargo);
@@ -309,7 +336,7 @@ public class Principal extends javax.swing.JFrame {
                         .addComponent(jLabel6)
                         .addGap(57, 57, 57)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(cbxDepCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cbxDepCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(btnLimparCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(btnSalvarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel6Layout.createSequentialGroup()
@@ -335,7 +362,7 @@ public class Principal extends javax.swing.JFrame {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 1042, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
@@ -352,9 +379,21 @@ public class Principal extends javax.swing.JFrame {
             Class[] types = new Class [] {
                 java.lang.Long.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
+            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tblFuncionarios.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblFuncionariosMouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(tblFuncionarios);
@@ -441,36 +480,34 @@ public class Principal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSalvarCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarCargoActionPerformed
-
-        String nome = txtNomeCargo.getText();
-               
-        if (nome.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha todos os campos obrigatórios.");
-            return;
-        }
-
         try {
+            CargoDAO cDAO = new CargoDAO();
+
+            String nome = txtNomeCargo.getText();
             Departamento dep = (Departamento) cbxDepCargo.getSelectedItem();
-            if (dep == null) {
-                JOptionPane.showMessageDialog(this, "Selecione um departamento!");
-                return;
-            }
 
             Cargo c = new Cargo();
-            c.setNome(txtNomeCargo.getText());
+            c.setNome(nome);
             c.setDepartamento(dep);
 
-            cargoDAO.inserir(c);
+            if (idCargoEdicao == null) {
+                //insert
+                cDAO.inserir(c);
+            } else {
+                //update
+                c.setId(idCargoEdicao);
+                cDAO.atualizar(c);
+            }
 
-            JOptionPane.showMessageDialog(this, "Cargo cadastrado com sucesso!");
-            atualizarTabelaFuncionario();
             atualizarTabelaCargo();
-            limparCampos();
-            carregarCombos();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Salário inválido. Digite um número válido.");
-        } catch (SQLException ex) {
-            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            txtNomeCargo.setText("");
+            cbxDepCargo.setSelectedIndex(0);
+            idCargoEdicao = null;
+
+            JOptionPane.showMessageDialog(this, "Cargo salvo com sucesso!");
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar cargo: " + e.getMessage());
         }
     }//GEN-LAST:event_btnSalvarCargoActionPerformed
 
@@ -479,26 +516,29 @@ public class Principal extends javax.swing.JFrame {
     }//GEN-LAST:event_txtNomeCargoActionPerformed
 
     private void btnSalvarDepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarDepActionPerformed
-
-        String nome = txtNomeDep.getText();
-               
-        if (nome.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Informe um departamento.");
-            return;
-        }
-
         try {
-            Departamento d = new Departamento(0, nome);
-            dDAO.inserir(d);
-            JOptionPane.showMessageDialog(this, "Departamento cadastrado com sucesso!");
-            atualizarTabelaFuncionario();
+            DepartamentoDAO dDAO = new DepartamentoDAO();
+
+            String nome = txtNomeDep.getText();
+  
+            if (idDepartamentoEdicao == null) {
+                //insert
+                Departamento d = new Departamento();
+                d.setNome(nome);
+                dDAO.inserir(d);
+
+            } else {
+                //update
+                Departamento d = new Departamento(idDepartamentoEdicao, nome);
+                dDAO.atualizar(d);
+            }
+
             atualizarTabelaDep();
             limparCampos();
-            carregarCombos();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Salário inválido. Digite um número válido.");
-        } catch (SQLException ex) {
-            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            idDepartamentoEdicao = null;
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar departamento");
         }
     }//GEN-LAST:event_btnSalvarDepActionPerformed
 
@@ -509,10 +549,12 @@ public class Principal extends javax.swing.JFrame {
     private void btnLimparCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparCargoActionPerformed
         txtNomeCargo.setText("");
         cbxDepCargo.setSelectedIndex(0);
+        idCargoEdicao = null;
     }//GEN-LAST:event_btnLimparCargoActionPerformed
 
     private void btnLimparDepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparDepActionPerformed
         txtNomeDep.setText("");
+        idDepartamentoEdicao = null;
     }//GEN-LAST:event_btnLimparDepActionPerformed
 
     private void btnRegistrarFuncionariosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarFuncionariosActionPerformed
@@ -597,6 +639,116 @@ public class Principal extends javax.swing.JFrame {
             javax.swing.JOptionPane.showMessageDialog(this, "Selecione um cargo para excluir!");
         } 
     }//GEN-LAST:event_btnExcluirCargoActionPerformed
+
+    private void tblDepMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblDepMouseClicked
+        if (evt.getClickCount() != 2) return; // só trata duplo clique
+
+        // 1) pega a linha visual
+        int viewRow = tblDep.getSelectedRow();
+        if (viewRow == -1) {
+            viewRow = tblDep.rowAtPoint(evt.getPoint());
+        }
+        if (viewRow < 0) {
+            System.out.println("tblDepMouseClicked: nenhuma linha encontrada");
+            return;
+        }
+        int modelRow = tblDep.convertRowIndexToModel(viewRow);
+
+        int colCount = tblDep.getColumnCount();
+        int colId = -1, colNome = -1;
+        for (int c = 0; c < colCount; c++) {
+            String colName = tblDep.getColumnName(c);
+            if (colName == null) continue;
+            String n = colName.trim().toLowerCase();
+            if (colId == -1 && (n.equals("id") || n.contains("id"))) colId = c;
+            if (colNome == -1 && (n.equals("nome") || n.contains("nome") || n.contains("name"))) colNome = c;
+        }
+
+        if (colId == -1 && colCount >= 1) colId = 0;
+        if (colNome == -1 && colCount >= 2) colNome = 1;
+
+        Object idObj = tblDep.getModel().getValueAt(modelRow, colId);
+        Object nomeObj = tblDep.getModel().getValueAt(modelRow, colNome);
+
+        if (idObj == null) {
+            System.out.println("tblDep: idObj == null");
+            return;
+        }
+        if (nomeObj == null) {
+            System.out.println("tblDep: nomeObj == null");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(idObj.toString());
+            String nome = nomeObj.toString();
+
+
+            txtNomeDep.setText(nome);
+
+            System.out.printf("Carregado departamento id=%d nome=%s%n", id, nome);
+
+        } catch (NumberFormatException ex) {
+            System.out.println("tblDep: erro parse id -> " + ex.getMessage());
+        }
+    }//GEN-LAST:event_tblDepMouseClicked
+
+    private void tblFuncionariosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblFuncionariosMouseClicked
+        if (evt.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(evt)) {
+
+            int viewRow = tblFuncionarios.getSelectedRow();
+
+            if (viewRow == -1) {
+                viewRow = tblFuncionarios.rowAtPoint(evt.getPoint());
+            }
+
+            if (viewRow < 0) return;
+
+            int modelRow = tblFuncionarios.convertRowIndexToModel(viewRow);
+
+            Object idObj = tblFuncionarios.getModel().getValueAt(modelRow, 0);
+
+            if (idObj == null) {
+                JOptionPane.showMessageDialog(this, "ID não encontrado na linha selecionada.");
+                return;
+            }
+
+            int id = Integer.parseInt(idObj.toString());
+
+            try {
+                new RegistrarFuncionarios(this, id).setVisible(true);
+            } catch (SQLException ex) {
+                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(this, "Erro ao abrir o funcionário: " + ex.getMessage());
+            }
+        }
+    }//GEN-LAST:event_tblFuncionariosMouseClicked
+
+    private void tblCargoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCargoMouseClicked
+        if (evt.getClickCount() == 2) {
+            int viewRow = tblCargo.getSelectedRow();
+            if (viewRow == -1) viewRow = tblCargo.rowAtPoint(evt.getPoint());
+            if (viewRow < 0) return;
+
+            int modelRow = tblCargo.convertRowIndexToModel(viewRow);
+
+            int id = (int) tblCargo.getModel().getValueAt(modelRow, 0);
+            String nome = tblCargo.getModel().getValueAt(modelRow, 1).toString();
+            int idDepartamento = (int) tblCargo.getModel().getValueAt(modelRow, 2);
+
+            idCargoEdicao = id;
+
+            txtNomeCargo.setText(nome);
+
+            for (int i = 0; i < cbxDepCargo.getItemCount(); i++) {
+                Departamento d = cbxDepCargo.getItemAt(i);
+                if (d.getId() == idDepartamento) {
+                    cbxDepCargo.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+    }//GEN-LAST:event_tblCargoMouseClicked
 
     /**
      * @param args the command line arguments
