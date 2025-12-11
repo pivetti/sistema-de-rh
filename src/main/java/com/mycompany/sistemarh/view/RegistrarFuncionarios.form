@@ -359,6 +359,8 @@
                                   </Group>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="btnAdicionarEndereco" min="-2" pref="140" max="-2" attributes="0"/>
+                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                      <Component id="btnEditarEndereco" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="separate" max="-2" attributes="0"/>
                                       <Component id="btnLimparEndereco" min="-2" pref="76" max="-2" attributes="0"/>
                                       <EmptySpace max="32767" attributes="0"/>
@@ -402,6 +404,7 @@
                                   <Component id="btnAdicionarEndereco" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
                                   <Component id="btnLimparEndereco" alignment="3" min="-2" pref="36" max="-2" attributes="0"/>
                                   <Component id="btnExcluirEndereco" alignment="3" min="-2" pref="37" max="-2" attributes="0"/>
+                                  <Component id="btnEditarEndereco" alignment="3" min="-2" pref="37" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
                           </Group>
@@ -506,6 +509,14 @@
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnExcluirEnderecoActionPerformed"/>
                       </Events>
                     </Component>
+                    <Component class="javax.swing.JButton" name="btnEditarEndereco">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Editar Endereco"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnEditarEnderecoActionPerformed"/>
+                      </Events>
+                    </Component>
                   </SubComponents>
                 </Container>
                 <Container class="javax.swing.JScrollPane" name="jScrollPane1">
@@ -596,7 +607,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" alignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
                                           <Component id="txtEmail" min="-2" pref="225" max="-2" attributes="0"/>
                                           <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
@@ -608,9 +619,11 @@
                                       </Group>
                                       <EmptySpace pref="448" max="32767" attributes="0"/>
                                   </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="btnAdicionarContato" min="-2" pref="150" max="-2" attributes="0"/>
+                                  <Group type="102" attributes="0">
+                                      <Component id="btnAdicionarContato" min="-2" pref="129" max="-2" attributes="0"/>
                                       <EmptySpace type="separate" max="-2" attributes="0"/>
+                                      <Component id="btnEditarContato" min="-2" pref="100" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="36" max="-2" attributes="0"/>
                                       <Component id="btnLimparContato" min="-2" pref="87" max="-2" attributes="0"/>
                                       <EmptySpace max="32767" attributes="0"/>
                                       <Component id="btnExcluirContato" min="-2" pref="87" max="-2" attributes="0"/>
@@ -643,6 +656,7 @@
                                   <Component id="btnAdicionarContato" alignment="3" min="-2" pref="33" max="-2" attributes="0"/>
                                   <Component id="btnLimparContato" alignment="3" min="-2" pref="33" max="-2" attributes="0"/>
                                   <Component id="btnExcluirContato" alignment="3" min="-2" pref="37" max="-2" attributes="0"/>
+                                  <Component id="btnEditarContato" alignment="3" min="-2" pref="37" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
                           </Group>
@@ -709,6 +723,14 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnExcluirContatoActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="btnEditarContato">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Editar Contato"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnEditarContatoActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>

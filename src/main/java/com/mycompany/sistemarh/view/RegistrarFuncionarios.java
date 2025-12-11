@@ -28,32 +28,42 @@ import javax.swing.table.DefaultTableModel;
  * @author Pichau
  */
 public class RegistrarFuncionarios extends javax.swing.JFrame {
-    private final Principal principal; 
+    private final Principal principal;
     private final DepartamentoDAO dDAO = new DepartamentoDAO();
     private final CargoDAO cDAO = new CargoDAO();
     private final FuncionarioDAO fDAO = new FuncionarioDAO();
-    private List<Endereco> listaEnderecos;
-    private List<Contato> listaContatos;
-    
-    public RegistrarFuncionarios() throws SQLException {
-        this.principal = null; 
-        initComponents();
-        setLocationRelativeTo(this);
-        listaEnderecos = new ArrayList<>();
-        listaContatos = new ArrayList<>();
-        carregarCombos();
-        cbxDepFuncionario.addActionListener(evt -> atualizarCargosPorDepartamento());
-    }
 
-    
+    private List<Endereco> listaEnderecos = new ArrayList<>();
+    private List<Contato> listaContatos = new ArrayList<>();
+
+    private boolean modoEdicao = false;
+    private int idFuncionario = -1;
+
     public RegistrarFuncionarios(Principal principal) throws SQLException {
         this.principal = principal;
         initComponents();
         setLocationRelativeTo(this);
-        listaEnderecos = new ArrayList<>();
-        listaContatos = new ArrayList<>();
         carregarCombos();
         cbxDepFuncionario.addActionListener(evt -> atualizarCargosPorDepartamento());
+        atualizarTabelaEndereco();
+        atualizarTabelaContato();
+    }
+
+    public RegistrarFuncionarios() throws SQLException {
+        this(null);
+        this.modoEdicao = false;
+    }
+
+    // Construtor para edição (usado pela main/Principal)
+    public RegistrarFuncionarios(Principal principal, int id) throws SQLException {
+        this.principal = principal;
+        initComponents();
+        setLocationRelativeTo(this);
+        carregarCombos();
+        cbxDepFuncionario.addActionListener(evt -> atualizarCargosPorDepartamento());
+        this.idFuncionario = id;
+        carregarFuncionario(id);
+        this.modoEdicao = true;
         atualizarTabelaEndereco();
         atualizarTabelaContato();
     }
@@ -95,6 +105,7 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
         rdbPrincipalEndereco = new javax.swing.JRadioButton();
         jLabel3 = new javax.swing.JLabel();
         btnExcluirEndereco = new javax.swing.JButton();
+        btnEditarEndereco = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblEndereco = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
@@ -107,6 +118,7 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
         btnAdicionarContato = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         btnExcluirContato = new javax.swing.JButton();
+        btnEditarContato = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblContato = new javax.swing.JTable();
 
@@ -297,6 +309,13 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
             }
         });
 
+        btnEditarEndereco.setText("Editar Endereco");
+        btnEditarEndereco.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditarEnderecoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -322,6 +341,8 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
                         .addGap(103, 518, Short.MAX_VALUE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(btnAdicionarEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(btnEditarEndereco)
                         .addGap(18, 18, 18)
                         .addComponent(btnLimparEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -354,7 +375,8 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAdicionarEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnLimparEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnExcluirEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnExcluirEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnEditarEndereco, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(10, 10, 10))
         );
 
@@ -450,6 +472,13 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
             }
         });
 
+        btnEditarContato.setText("Editar Contato");
+        btnEditarContato.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditarContatoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
@@ -467,8 +496,10 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
                                 .addComponent(rdbPrincipalContato, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addContainerGap(448, Short.MAX_VALUE))
                     .addGroup(jPanel7Layout.createSequentialGroup()
-                        .addComponent(btnAdicionarContato, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnAdicionarContato, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
+                        .addComponent(btnEditarContato, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(36, 36, 36)
                         .addComponent(btnLimparContato, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnExcluirContato, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -493,7 +524,8 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAdicionarContato, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnLimparContato, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnExcluirContato, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnExcluirContato, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnEditarContato, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(12, 12, 12))
         );
 
@@ -577,36 +609,36 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCancelarCttActionPerformed
 
     private void btnSalvarFuncionariosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarFuncionariosActionPerformed
-        Funcionario f = new Funcionario();
+        try {
+            Funcionario f = new Funcionario();
+            f.setNome(txtNomeFuncionario.getText());
+            f.setSalario(Double.parseDouble(txtSalarioFuncionario.getText()));
 
-        f.setNome(txtNomeFuncionario.getText());
-        f.setSalario(Double.parseDouble(txtSalarioFuncionario.getText()));
-        f.setCargo((Cargo) cbCargo.getSelectedItem());
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            f.setDataEntrada(LocalDate.parse(ftdAdmissaoFuncionario.getText(), dtf));
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String saidaTxt = ftdSaidaFuncionario.getText().replace("/", "").trim();
+            if (!saidaTxt.isEmpty()) f.setDataSaida(LocalDate.parse(ftdSaidaFuncionario.getText(), dtf));
 
-        f.setDataEntrada(LocalDate.parse(ftdAdmissaoFuncionario.getText(), dtf));
+            f.setCargo((Cargo) cbCargo.getSelectedItem());
+            f.setEnderecos(new ArrayList<>(listaEnderecos));
+            f.setContatos(new ArrayList<>(listaContatos));
 
-        LocalDate saida = null;
-        String saidaTxt = ftdSaidaFuncionario.getText().replace("/", "").trim();
-        if (!saidaTxt.isEmpty()) {
-            saida = LocalDate.parse(ftdSaidaFuncionario.getText(), dtf);
-        }
+            if (modoEdicao) {
+                f.setId(this.idFuncionario);
+                fDAO.atualizar(f); // UPDATE com transação
+                JOptionPane.showMessageDialog(this, "Funcionário atualizado com sucesso!");
+            } else {
+                fDAO.inserir(f); // seu método de insert existente
+                JOptionPane.showMessageDialog(this, "Funcionário cadastrado com sucesso!");
+            }
 
-        f.setEnderecos(listaEnderecos);
-        f.setContatos(listaContatos);
-
-        fDAO.inserir(f);
-
-        JOptionPane.showMessageDialog(this, "Funcionário cadastrado com sucesso!");
-        try {  
-            principal.atualizarTabelaFuncionario();
-        } catch (SQLException ex) {
-            Logger.getLogger(RegistrarFuncionarios.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        atualizarTabelaEndereco();
-        atualizarTabelaContato();
-        dispose();
+            if (principal != null) principal.atualizarTabelaFuncionario();
+            dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar funcionário: " + ex.getMessage());
+            ex.printStackTrace();
+        }   
     }//GEN-LAST:event_btnSalvarFuncionariosActionPerformed
 
     private void txtNomeFuncionarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNomeFuncionarioActionPerformed
@@ -631,7 +663,6 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCancelarDadosPessoaisActionPerformed
 
     private void btnAdicionarEnderecoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdicionarEnderecoActionPerformed
-
         Endereco end = new Endereco();
         end.setRua(txtRua.getText());
         end.setNumero(txtNumero.getText());
@@ -639,42 +670,32 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
         end.setCep(ftdCep.getText());
         end.setCidade(txtCidade.getText());
         end.setEstado(txtEstado.getText());
-
         boolean principal = rdbPrincipalEndereco.isSelected();
-
-        //se esse for o principal todos os outros deixam de ser
         if (principal) {
-            for (Endereco e : listaEnderecos) {
-                e.setAtivo(false);
-            }
+            for (Endereco e : listaEnderecos) e.setAtivo(false);
             end.setAtivo(true);
         } else {
             end.setAtivo(false);
         }
-
         listaEnderecos.add(end);
-
         atualizarTabelaEndereco();
+        limparCamposEndereco(); 
     }//GEN-LAST:event_btnAdicionarEnderecoActionPerformed
 
     private void btnAdicionarContatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdicionarContatoActionPerformed
         Contato c = new Contato();
         c.setTelefone(txtTelefone.getText());
         c.setEmail(txtEmail.getText());
-
         boolean principal = rdbPrincipalContato.isSelected();
-
         if (principal) {
-            for (Contato ct : listaContatos) {
-                ct.setAtivo(false);
-            }
+            for (Contato ct : listaContatos) ct.setAtivo(false);
             c.setAtivo(true);
         } else {
             c.setAtivo(false);
         }
-
         listaContatos.add(c);
         atualizarTabelaContato();
+        limparCamposContato();
     }//GEN-LAST:event_btnAdicionarContatoActionPerformed
 
     private void txtTelefoneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTelefoneActionPerformed
@@ -712,6 +733,50 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
             atualizarTabelaContato();
         }
     }//GEN-LAST:event_btnExcluirContatoActionPerformed
+
+    private void btnEditarEnderecoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarEnderecoActionPerformed
+        int index = tblEndereco.getSelectedRow();
+        if (index >= 0) {
+
+            // Recupera o endereço selecionado
+            Endereco end = listaEnderecos.get(index);
+
+            // Preenche os campos da tela com os dados
+            txtRua.setText(end.getRua());
+            txtNumero.setText(end.getNumero());
+            txtBairro.setText(end.getBairro());
+            ftdCep.setText(end.getCep());
+            txtCidade.setText(end.getCidade());
+            txtEstado.setText(end.getEstado());
+            rdbPrincipalEndereco.setSelected(end.isAtivo());
+
+            // Remove temporariamente da lista
+            listaEnderecos.remove(index);
+
+            // Atualiza a JTable
+            atualizarTabelaEndereco();
+        }
+    }//GEN-LAST:event_btnEditarEnderecoActionPerformed
+
+    private void btnEditarContatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarContatoActionPerformed
+        int index = tblContato.getSelectedRow();
+        if (index >= 0) {
+
+            // Recupera contato selecionado
+            Contato c = listaContatos.get(index);
+
+            // Preenche campos
+            txtTelefone.setText(c.getTelefone());
+            txtEmail.setText(c.getEmail());
+            rdbPrincipalContato.setSelected(c.isAtivo());
+
+            // Remove temporariamente da lista
+            listaContatos.remove(index);
+
+            // Atualiza tabela
+            atualizarTabelaContato();
+        }
+    }//GEN-LAST:event_btnEditarContatoActionPerformed
 
     /**
      * @param args the command line arguments
@@ -758,6 +823,8 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
     private javax.swing.JButton btnCancelarCtt;
     private javax.swing.JButton btnCancelarDadosPessoais;
     private javax.swing.JButton btnCancelarEnd;
+    private javax.swing.JButton btnEditarContato;
+    private javax.swing.JButton btnEditarEndereco;
     private javax.swing.JButton btnExcluirContato;
     private javax.swing.JButton btnExcluirEndereco;
     private javax.swing.JButton btnLimparContato;
@@ -797,52 +864,6 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
     private javax.swing.JTextField txtTelefone;
     // End of variables declaration//GEN-END:variables
 
-    public void atualizarTabelaEndereco() {
-        DefaultTableModel tabela = (DefaultTableModel) tblEndereco.getModel();
-        tabela.setRowCount(0);
-
-        for (Endereco e : listaEnderecos) {
-            tabela.addRow(new Object[]{
-                e.getRua(),
-                e.getNumero(),
-                e.getBairro(),
-                e.getCep(),
-                e.getCidade(),
-                e.getEstado(),
-                e.isAtivo() ? "Sim" : "Não"
-            });
-        }
-    }
-        
-    public void atualizarTabelaContato() {
-        DefaultTableModel tabela = (DefaultTableModel) tblContato.getModel();
-        tabela.setRowCount(0);
-
-        for (Contato c : listaContatos) {
-            tabela.addRow(new Object[]{
-                c.getId(),
-                c.getTelefone(),
-                c.getEmail(),
-                c.isAtivo() ? "Sim" : "Não"
-            });
-        }
-    }
-
-    private void atualizarCargosPorDepartamento() {
-        Departamento d = (Departamento) cbxDepFuncionario.getSelectedItem();
-
-        cbCargo.removeAllItems();
-
-        if (d == null || d.getId() == 0) {
-            cbCargo.addItem(new Cargo(0, "Selecione um departamento"));
-            return;
-        }
-
-        for (Cargo c : cDAO.listarPorDepartamento(d.getId())) {
-            cbCargo.addItem(c);
-        }
-    }
-
     private void carregarCombos() throws SQLException {
         cbxDepFuncionario.removeAllItems();
         cbCargo.removeAllItems();
@@ -855,6 +876,108 @@ public class RegistrarFuncionarios extends javax.swing.JFrame {
         cbCargo.addItem(new Cargo(0, "Selecione um departamento"));
     }
 
+    private void atualizarCargosPorDepartamento() {
+        Departamento d = (Departamento) cbxDepFuncionario.getSelectedItem();
+        cbCargo.removeAllItems();
+        if (d == null || d.getId() == 0) {
+            cbCargo.addItem(new Cargo(0, "Selecione um departamento"));
+            return;
+        }
+        for (Cargo c : cDAO.listarPorDepartamento(d.getId())) cbCargo.addItem(c);
+    }
+
+    // ----------------------
+    // CARREGAR FUNCIONÁRIO (edição)
+    // ----------------------
+    private void carregarFuncionario(int id) {
+        Funcionario f = fDAO.buscarPorId(id);
+        if (f == null) return;
+
+        // preencher campos básicos
+        txtNomeFuncionario.setText(f.getNome());
+        txtSalarioFuncionario.setText(String.valueOf(f.getSalario()));
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (f.getDataEntrada() != null) ftdAdmissaoFuncionario.setText(f.getDataEntrada().format(dtf));
+        if (f.getDataSaida() != null) ftdSaidaFuncionario.setText(f.getDataSaida().format(dtf));
+
+        // selecionar departamento/cargo
+        Departamento dep = f.getCargo().getDepartamento();
+        for (int i = 0; i < cbxDepFuncionario.getItemCount(); i++) {
+            Departamento di = cbxDepFuncionario.getItemAt(i);
+            if (di.getId() == dep.getId()) {
+                cbxDepFuncionario.setSelectedIndex(i);
+                break;
+            }
+        }
+        atualizarCargosPorDepartamento();
+        for (int i = 0; i < cbCargo.getItemCount(); i++) {
+            Cargo ci = cbCargo.getItemAt(i);
+            if (ci.getId() == f.getCargo().getId()) {
+                cbCargo.setSelectedIndex(i);
+                break;
+            }
+        }
+
+        // listas
+        this.listaEnderecos = new ArrayList<>(f.getEnderecos());
+        this.listaContatos = new ArrayList<>(f.getContatos());
+
+        // preencher campos do endereço/contato ativo se quiser espelhar
+        for (Endereco e : listaEnderecos) {
+            if (e.isAtivo()) {
+                txtRua.setText(e.getRua());
+                txtNumero.setText(e.getNumero());
+                txtBairro.setText(e.getBairro());
+                ftdCep.setText(e.getCep());
+                txtCidade.setText(e.getCidade());
+                txtEstado.setText(e.getEstado());
+            }
+        }
+        for (Contato c : listaContatos) {
+            if (c.isAtivo()) {
+                txtTelefone.setText(c.getTelefone());
+                txtEmail.setText(c.getEmail());
+            }
+        }
+    }
+
+    // ----------------------
+    // TABELAS
+    // ----------------------
+    public void atualizarTabelaEndereco() {
+        DefaultTableModel tabela = (DefaultTableModel) tblEndereco.getModel();
+        tabela.setRowCount(0);
+        for (Endereco e : listaEnderecos) {
+            tabela.addRow(new Object[]{
+                e.getRua(), e.getNumero(), e.getBairro(), e.getCep(), e.getCidade(), e.getEstado(), e.isAtivo() ? "Sim" : "Não"
+            });
+        }
+    }
+
+    public void atualizarTabelaContato() {
+        DefaultTableModel tabela = (DefaultTableModel) tblContato.getModel();
+        tabela.setRowCount(0);
+        for (Contato c : listaContatos) {
+            tabela.addRow(new Object[]{
+                c.getTelefone(), c.getEmail(), c.isAtivo() ? "Sim" : "Não"
+            });
+        }
+    }
 
 
+    private void limparCamposEndereco() {
+        txtRua.setText("");
+        txtNumero.setText("");
+        txtBairro.setText("");
+        ftdCep.setText("");
+        txtCidade.setText("");
+        txtEstado.setText("");
+        rdbPrincipalEndereco.setSelected(false);
+    }
+
+    private void limparCamposContato() {
+        txtTelefone.setText("");
+        txtEmail.setText("");
+        rdbPrincipalContato.setSelected(false);
+    }
 }

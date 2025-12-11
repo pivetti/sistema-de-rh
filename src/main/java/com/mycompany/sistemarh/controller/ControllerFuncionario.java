@@ -6,6 +6,7 @@ package com.mycompany.sistemarh.controller;
 
 import com.mycompany.sistemarh.dao.FuncionarioDAO;
 import com.mycompany.sistemarh.model.Funcionario;
+import java.sql.SQLException;
 
 /**
  *
@@ -20,7 +21,7 @@ public class ControllerFuncionario {
     }
     
     
-    public void atualizarFuncionario(Funcionario f) {
+    public void atualizarFuncionario(Funcionario f) throws SQLException {
         dao.atualizar(f);
     }
 

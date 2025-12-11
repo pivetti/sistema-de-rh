@@ -17,6 +17,7 @@ import com.mycompany.sistemarh.model.Funcionario;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -209,73 +210,15 @@ public class FuncionarioDAO {
         return new ArrayList<>(mapa.values());
     }
 
-    public void atualizar(Funcionario f) {
-        String sqlFunc = """
-            UPDATE tb_funcionario
-            SET nome = ?, salario = ?, data_entrada = ?, data_saida = ?, id_cargo = ?
-            WHERE id = ?
-        """;
-
-        String sqlEnd = """
-            UPDATE tb_endereco
-            SET rua = ?, numero = ?, bairro = ?, cep = ?, cidade = ?, estado = ?, ativo = ?
-            WHERE id = ? AND id_funcionario = ?
-        """;
-
-        String sqlCont = """
-            UPDATE tb_contato
-            SET telefone = ?, email = ?, ativo = ?
-            WHERE id = ? AND id_funcionario = ?
-        """;
-
-        try (Connection con = Conexao.getConnection();
-             PreparedStatement psFunc = con.prepareStatement(sqlFunc);
-             PreparedStatement psEnd = con.prepareStatement(sqlEnd);
-             PreparedStatement psCont = con.prepareStatement(sqlCont)) {
-
-            //atualizar funcionario
-            psFunc.setString(1, f.getNome());
-            psFunc.setBigDecimal(2, BigDecimal.valueOf(f.getSalario()));
-            psFunc.setDate(3, Date.valueOf(f.getDataEntrada()));
-
-            if (f.getDataSaida() != null)
-                psFunc.setDate(4, Date.valueOf(f.getDataSaida()));
-            else
-                psFunc.setNull(4, Types.DATE);
-
-            psFunc.setInt(5, f.getCargo().getId());
-            psFunc.setInt(6, f.getId());
-            psFunc.executeUpdate();
-
-            //atualiza os enderecos
-            for (Endereco e : f.getEnderecos()) {
-                psEnd.setString(1, e.getRua());
-                psEnd.setString(2, e.getNumero());
-                psEnd.setString(3, e.getBairro());
-                psEnd.setString(4, e.getCep());
-                psEnd.setString(5, e.getCidade());
-                psEnd.setString(6, e.getEstado());
-                psEnd.setBoolean(7, e.isAtivo());
-                psEnd.setInt(8, e.getId());
-                psEnd.setInt(9, f.getId());
-                psEnd.executeUpdate();
-            }
-
-            //atualiza os contatos
-            for (Contato c : f.getContatos()) {
-                psCont.setString(1, c.getTelefone());
-                psCont.setString(2, c.getEmail());
-                psCont.setBoolean(3, c.isAtivo());
-                psCont.setInt(4, c.getId());
-                psCont.setInt(5, f.getId());
-                psCont.executeUpdate();
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Erro ao atualizar funcionário -> " + e);
-        }
-    }
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
     public void excluir(int id) {
         //apagar as constraints FK
         String sqlEnd = "DELETE FROM tb_endereco WHERE id_funcionario = ?";
@@ -303,15 +246,173 @@ public class FuncionarioDAO {
             System.out.println("Erro ao excluir funcionário -> " + e);
         }
     }
+    
+    
+    
+    
+    
+
+    public void atualizar(Funcionario f) throws SQLException {
+        String sqlUpdateFunc = "UPDATE tb_funcionario SET nome = ?, salario = ?, data_entrada = ?, data_saida = ?, id_cargo = ? WHERE id = ?";
+
+        Connection con = null;
+        try {
+            con = Conexao.getConnection();
+            con.setAutoCommit(false);
+
+            // 1) Atualiza funcionário
+            try (PreparedStatement ps = con.prepareStatement(sqlUpdateFunc)) {
+                ps.setString(1, f.getNome());
+                ps.setDouble(2, f.getSalario());
+                ps.setDate(3, Date.valueOf(f.getDataEntrada()));
+                if (f.getDataSaida() != null) ps.setDate(4, Date.valueOf(f.getDataSaida())); else ps.setNull(4, Types.DATE);
+                ps.setInt(5, f.getCargo().getId());
+                ps.setInt(6, f.getId());
+                ps.executeUpdate();
+            }
+
+            int idFunc = f.getId();
+
+            // 2) Sincronizar ENDEREÇOS (DELETE de removidos, UPDATE de existentes, INSERT de novos)
+
+            // ids atuais enviados pelo cliente
+            List<Integer> endsAtuaisIds = new ArrayList<>();
+            for (Endereco e : f.getEnderecos()) if (e.getId() > 0) endsAtuaisIds.add(e.getId());
+
+            // ids no BD
+            List<Integer> idsNoBD = new ArrayList<>();
+            String selEnds = "SELECT id FROM tb_endereco WHERE id_funcionario = ?";
+            try (PreparedStatement ps = con.prepareStatement(selEnds)) {
+                ps.setInt(1, idFunc);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) idsNoBD.add(rs.getInt("id"));
+                }
+            }
+
+            // deletes = idsNoBD - endsAtuaisIds
+            for (Integer idBd : idsNoBD) {
+                if (!endsAtuaisIds.contains(idBd)) {
+                    try (PreparedStatement ps = con.prepareStatement("DELETE FROM tb_endereco WHERE id = ?")) {
+                        ps.setInt(1, idBd);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            // garantir unicidade do ativo: se existe algum ativo na lista, desativa todos antes
+            boolean existeAtivo = f.getEnderecos().stream().anyMatch(Endereco::isAtivo);
+            if (existeAtivo) {
+                try (PreparedStatement ps = con.prepareStatement("UPDATE tb_endereco SET ativo = FALSE WHERE id_funcionario = ?")) {
+                    ps.setInt(1, idFunc);
+                    ps.executeUpdate();
+                }
+            }
+
+            // inserir / atualizar
+            for (Endereco e : f.getEnderecos()) {
+                if (e.getId() == 0) {
+                    String ins = "INSERT INTO tb_endereco (rua, numero, bairro, cep, cidade, estado, id_funcionario, ativo) VALUES (?,?,?,?,?,?,?,?) RETURNING id";
+                    try (PreparedStatement ps = con.prepareStatement(ins)) {
+                        ps.setString(1, e.getRua());
+                        ps.setString(2, e.getNumero());
+                        ps.setString(3, e.getBairro());
+                        ps.setString(4, e.getCep());
+                        ps.setString(5, e.getCidade());
+                        ps.setString(6, e.getEstado());
+                        ps.setInt(7, idFunc);
+                        ps.setBoolean(8, e.isAtivo());
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) e.setId(rs.getInt(1));
+                        }
+                    }
+                } else {
+                    String upd = "UPDATE tb_endereco SET rua=?, numero=?, bairro=?, cep=?, cidade=?, estado=?, ativo=? WHERE id=?";
+                    try (PreparedStatement ps = con.prepareStatement(upd)) {
+                        ps.setString(1, e.getRua());
+                        ps.setString(2, e.getNumero());
+                        ps.setString(3, e.getBairro());
+                        ps.setString(4, e.getCep());
+                        ps.setString(5, e.getCidade());
+                        ps.setString(6, e.getEstado());
+                        ps.setBoolean(7, e.isAtivo());
+                        ps.setInt(8, e.getId());
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            // 3) Mesma lógica para CONTATOS
+            List<Integer> contAtuaisIds = new ArrayList<>();
+            for (Contato c : f.getContatos()) if (c.getId() > 0) contAtuaisIds.add(c.getId());
+
+            List<Integer> idsContBD = new ArrayList<>();
+            String selCont = "SELECT id FROM tb_contato WHERE id_funcionario = ?";
+            try (PreparedStatement ps = con.prepareStatement(selCont)) {
+                ps.setInt(1, idFunc);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) idsContBD.add(rs.getInt("id"));
+                }
+            }
+
+            for (Integer idBd : idsContBD) {
+                if (!contAtuaisIds.contains(idBd)) {
+                    try (PreparedStatement ps = con.prepareStatement("DELETE FROM tb_contato WHERE id = ?")) {
+                        ps.setInt(1, idBd);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            boolean existeAtivoCont = f.getContatos().stream().anyMatch(Contato::isAtivo);
+            if (existeAtivoCont) {
+                try (PreparedStatement ps = con.prepareStatement("UPDATE tb_contato SET ativo = FALSE WHERE id_funcionario = ?")) {
+                    ps.setInt(1, idFunc);
+                    ps.executeUpdate();
+                }
+            }
+
+            for (Contato c : f.getContatos()) {
+                if (c.getId() == 0) {
+                    String ins = "INSERT INTO tb_contato (telefone, email, id_funcionario, ativo) VALUES (?,?,?,?) RETURNING id";
+                    try (PreparedStatement ps = con.prepareStatement(ins)) {
+                        ps.setString(1, c.getTelefone());
+                        ps.setString(2, c.getEmail());
+                        ps.setInt(3, idFunc);
+                        ps.setBoolean(4, c.isAtivo());
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) c.setId(rs.getInt(1));
+                        }
+                    }
+                } else {
+                    String upd = "UPDATE tb_contato SET telefone=?, email=?, ativo=? WHERE id=?";
+                    try (PreparedStatement ps = con.prepareStatement(upd)) {
+                        ps.setString(1, c.getTelefone());
+                        ps.setString(2, c.getEmail());
+                        ps.setBoolean(3, c.isAtivo());
+                        ps.setInt(4, c.getId());
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            con.commit();
+        } catch (SQLException ex) {
+            if (con != null) try { con.rollback(); } catch (SQLException e) { /* ignore */ }
+            throw ex;
+        } finally {
+            if (con != null) try { con.setAutoCommit(true); con.close(); } catch (SQLException e) { /* ignore */ }
+        }
+    }
 
     public Funcionario buscarPorId(int id) {
         String sql = """
-            SELECT * 
+            SELECT 
+                f.id AS func_id, f.nome AS func_nome, f.salario, f.data_entrada, f.data_saida,
+                c.id AS cargo_id, c.nome AS cargo_nome,
+                d.id AS dep_id, d.nome AS dep_nome
             FROM tb_funcionario f
             JOIN tb_cargo c ON f.id_cargo = c.id
             JOIN tb_departamento d ON c.id_departamento = d.id
-            LEFT JOIN tb_endereco e ON f.id = e.id_funcionario
-            LEFT JOIN tb_contato ct ON f.id = ct.id_funcionario
             WHERE f.id = ?
         """;
 
@@ -319,73 +420,78 @@ public class FuncionarioDAO {
 
         try (Connection con = Conexao.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    if (f == null) {
-                        Departamento dep = new Departamento(
-                            rs.getInt("d.id"),
-                            rs.getString("d.nome")
-                        );
+                if (rs.next()) {
+                    Departamento dep = new Departamento(rs.getInt("dep_id"), rs.getString("dep_nome"));
+                    Cargo cargo = new Cargo(rs.getInt("cargo_id"), rs.getString("cargo_nome"), dep);
 
-                        Cargo cargo = new Cargo(
-                            rs.getInt("c.id"),
-                            rs.getString("c.nome"),
-                            dep
-                        );
+                    f = new Funcionario();
+                    f.setId(rs.getInt("func_id"));
+                    f.setNome(rs.getString("func_nome"));
+                    f.setSalario(rs.getDouble("salario"));
+                    Date d1 = rs.getDate("data_entrada");
+                    if (d1 != null) f.setDataEntrada(d1.toLocalDate());
+                    Date d2 = rs.getDate("data_saida");
+                    if (d2 != null) f.setDataSaida(d2.toLocalDate());
+                    f.setCargo(cargo);
+                }
+            }
 
-                        f = new Funcionario();
-                        f.setId(rs.getInt("f.id"));
-                        f.setNome(rs.getString("f.nome"));
-                        f.setSalario(rs.getDouble("f.salario"));
-
-                        Date dataEntrada = rs.getDate("f.data_entrada");
-                        if (dataEntrada != null) f.setDataEntrada(dataEntrada.toLocalDate());
-
-                        Date dataSaida = rs.getDate("f.data_saida");
-                        if (dataSaida != null) f.setDataSaida(dataSaida.toLocalDate());
-
-                        f.setCargo(cargo);
-                        f.setEnderecos(new ArrayList<>());
-                        f.setContatos(new ArrayList<>());
+            if (f != null) {
+                // carregar endereços
+                String sqlEnd = "SELECT id, rua, numero, bairro, cep, cidade, estado, ativo FROM tb_endereco WHERE id_funcionario = ?";
+                try (PreparedStatement ps2 = con.prepareStatement(sqlEnd)) {
+                    ps2.setInt(1, id);
+                    try (ResultSet rs2 = ps2.executeQuery()) {
+                        List<Endereco> ends = new ArrayList<>();
+                        while (rs2.next()) {
+                            Endereco e = new Endereco(
+                                rs2.getInt("id"),
+                                rs2.getString("rua"),
+                                rs2.getString("numero"),
+                                rs2.getString("bairro"),
+                                rs2.getString("cep"),
+                                rs2.getString("cidade"),
+                                rs2.getString("estado"),
+                                rs2.getBoolean("ativo"),
+                                id
+                            );
+                            ends.add(e);
+                        }
+                        f.setEnderecos(ends);
                     }
+                }
 
-                    int idEnd = rs.getInt("e.id");
-                    if (!rs.wasNull()) {
-                        Endereco e = new Endereco(
-                            idEnd,
-                            rs.getString("e.rua"),
-                            rs.getString("e.numero"),
-                            rs.getString("e.bairro"),
-                            rs.getString("e.cep"),
-                            rs.getString("e.cidade"),
-                            rs.getString("e.estado"),
-                            rs.getBoolean("e.ativo"),
-                            f.getId()
-                        );
-                        f.getEnderecos().add(e);
-                    }
-
-                    int idCont = rs.getInt("ct.id");
-                    if (!rs.wasNull()) {
-                        Contato ctt = new Contato(
-                            idCont,
-                            rs.getString("ct.telefone"),
-                            rs.getString("ct.email"),
-                            rs.getBoolean("ct.ativo"),
-                            f.getId()
-                        );
-                        f.getContatos().add(ctt);
+                // carregar contatos
+                String sqlCont = "SELECT id, telefone, email, ativo FROM tb_contato WHERE id_funcionario = ?";
+                try (PreparedStatement ps3 = con.prepareStatement(sqlCont)) {
+                    ps3.setInt(1, id);
+                    try (ResultSet rs3 = ps3.executeQuery()) {
+                        List<Contato> conts = new ArrayList<>();
+                        while (rs3.next()) {
+                            Contato ctt = new Contato(
+                                rs3.getInt("id"),
+                                rs3.getString("telefone"),
+                                rs3.getString("email"),
+                                rs3.getBoolean("ativo"),
+                                id
+                            );
+                            conts.add(ctt);
+                        }
+                        f.setContatos(conts);
                     }
                 }
             }
 
-        } catch (SQLException e) {
-            System.out.println("Erro ao buscar funcionário -> " + e);
+        } catch (SQLException ex) {
+            System.out.println("Erro buscarPorId -> " + ex);
         }
 
         return f;
     }
+
 
     
 }
