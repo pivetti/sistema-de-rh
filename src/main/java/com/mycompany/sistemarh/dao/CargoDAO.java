@@ -109,7 +109,7 @@ public class CargoDAO {
         return lista;
     }
 
-public void excluir(int id) {
+    public void excluir(int id) {
         String sql = "DELETE FROM tb_cargo WHERE id = ?";
 
         try (Connection con = Conexao.getConnection();

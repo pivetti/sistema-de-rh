@@ -7,25 +7,38 @@ package com.mycompany.sistemarh.view;
 import com.mycompany.sistemarh.dao.CargoDAO;
 import com.mycompany.sistemarh.dao.DepartamentoDAO;
 import com.mycompany.sistemarh.dao.FuncionarioDAO;
+import com.mycompany.sistemarh.database.Conexao;
 import com.mycompany.sistemarh.model.Cargo;
 import com.mycompany.sistemarh.model.Contato;
 import com.mycompany.sistemarh.model.Departamento;
 import com.mycompany.sistemarh.model.Endereco;
 import com.mycompany.sistemarh.model.Funcionario;
+import com.mycompany.sistemarh.util.ConfiguraComponentes;
+import com.mycompany.sistemarh.util.RelatorioUtil;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 /**
  *
  * @author Pichau
  */
-public class Principal extends javax.swing.JFrame {
+public class Principal extends TelaBase {
     private static final DepartamentoDAO dDAO = new DepartamentoDAO();
     private static final CargoDAO cargoDAO = new CargoDAO();
     private static final FuncionarioDAO fDAO = new FuncionarioDAO();
@@ -35,6 +48,23 @@ public class Principal extends javax.swing.JFrame {
 
     public Principal() throws SQLException {
         initComponents();
+        configurarTela16x9();
+        configurarTabelas();
+        configurarTabelaDepartamento();
+        configurarPlaceholders();
+        estilizarTabela(tblFuncionarios);
+        estilizarTabela(tblDep);
+        estilizarTabela(tblCargo);
+
+        estilizarCabecalho(tblFuncionarios);
+        estilizarCabecalho(tblDep);
+        estilizarCabecalho(tblCargo);
+        
+        jScrollPane1.getViewport().setOpaque(false);
+        jScrollPane2.getViewport().setOpaque(false);
+        jScrollPane3.getViewport().setOpaque(false);
+
+        
         setResizable(false);
         setLocationRelativeTo(this);
         carregarCombos();
@@ -67,17 +97,19 @@ public class Principal extends javax.swing.JFrame {
         txtNomeCargo = new javax.swing.JTextField();
         btnLimparCargo = new javax.swing.JButton();
         cbxDepCargo = new javax.swing.JComboBox<>();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tblCargo = new javax.swing.JTable();
         btnCancelarCargo = new javax.swing.JButton();
         btnExcluirCargo = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblCargo = new javax.swing.JTable();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblFuncionarios = new javax.swing.JTable();
         btnRegistrarFuncionarios = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         btnCancelarFuncionario = new javax.swing.JButton();
+        btnDesligarFuncionario = new javax.swing.JButton();
+        btnImprimirFuncionarios = new javax.swing.JButton();
         btnExcluirFuncionario = new javax.swing.JButton();
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -93,8 +125,9 @@ public class Principal extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel9.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel9.setForeground(new java.awt.Color(255, 255, 255));
+        jPanel7.setPreferredSize(new java.awt.Dimension(1280, 720));
+
+        jPanel9.setPreferredSize(new java.awt.Dimension(1280, 720));
 
         btnSalvarDep.setText("Salvar");
         btnSalvarDep.addActionListener(new java.awt.event.ActionListener() {
@@ -103,7 +136,7 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        txtNomeDep.setBorder(javax.swing.BorderFactory.createTitledBorder("Nome:"));
+        txtNomeDep.setBorder(null);
         txtNomeDep.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtNomeDepActionPerformed(evt);
@@ -161,72 +194,65 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
-        jLabel7.setText("Departamentos");
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel7.setText("CADASTRAR DEPARTAMENTO");
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane2)
-            .addGroup(jPanel9Layout.createSequentialGroup()
-                .addGap(42, 42, 42)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addComponent(txtNomeDep, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(74, 74, 74)
-                        .addComponent(btnLimparDep, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnSalvarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(692, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
-                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGap(42, 42, 42)
+                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(btnExcluirDepartamento, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(txtNomeDep, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(34, 34, 34)
+                                .addComponent(btnLimparDep, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnSalvarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(176, 741, Short.MAX_VALUE))
                             .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel7)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(btnCancelarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(30, 30, 30))))
+                                .addComponent(btnCancelarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(jPanel9Layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnExcluirDepartamento, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18))
         );
         jPanel9Layout.setVerticalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addGap(24, 24, 24)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnCancelarDep)
-                    .addComponent(jLabel7))
-                .addGap(81, 81, 81)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtNomeDep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(btnSalvarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnLimparDep, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(154, 154, 154)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(btnCancelarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(41, 41, 41)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtNomeDep, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnLimparDep, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSalvarDep, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 48, Short.MAX_VALUE)
                 .addComponent(btnExcluirDepartamento, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 440, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(343, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, 1305, Short.MAX_VALUE)
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, 694, Short.MAX_VALUE)
         );
 
         paneDep.addTab("Departamento", jPanel7);
-
-        jPanel6.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel6.setForeground(new java.awt.Color(255, 255, 255));
 
         btnSalvarCargo.setText("Salvar");
         btnSalvarCargo.addActionListener(new java.awt.event.ActionListener() {
@@ -235,7 +261,7 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        txtNomeCargo.setBorder(javax.swing.BorderFactory.createTitledBorder("Nome:"));
+        txtNomeCargo.setBorder(null);
         txtNomeCargo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtNomeCargoActionPerformed(evt);
@@ -249,21 +275,38 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        cbxDepCargo.setBorder(javax.swing.BorderFactory.createTitledBorder("Departamento:"));
+        cbxDepCargo.setBorder(null);
+
+        btnCancelarCargo.setText("Cancelar");
+        btnCancelarCargo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelarCargoActionPerformed(evt);
+            }
+        });
+
+        btnExcluirCargo.setText("Excluir");
+        btnExcluirCargo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExcluirCargoActionPerformed(evt);
+            }
+        });
+
+        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel6.setText("CADASTRAR CARGOS");
 
         tblCargo.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "ID", "Nome", "Departamento ID"
+                "ID", "Nome", "Departamento ID", "Departamento"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -281,51 +324,30 @@ public class Principal extends javax.swing.JFrame {
         });
         jScrollPane3.setViewportView(tblCargo);
 
-        btnCancelarCargo.setText("Cancelar");
-        btnCancelarCargo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCancelarCargoActionPerformed(evt);
-            }
-        });
-
-        btnExcluirCargo.setText("Excluir");
-        btnExcluirCargo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnExcluirCargoActionPerformed(evt);
-            }
-        });
-
-        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
-        jLabel6.setText("Cargos");
-
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 1272, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(40, 40, 40)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(txtNomeCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnExcluirCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addGap(40, 40, 40)
-                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addComponent(jLabel6)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(btnCancelarCargo)
-                                .addGap(9, 9, 9))
-                            .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(txtNomeCargo, javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cbxDepCargo, javax.swing.GroupLayout.Alignment.LEADING, 0, 297, Short.MAX_VALUE))
-                                .addGap(133, 133, 133)
-                                .addComponent(btnLimparCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(33, 33, 33)
-                                .addComponent(btnSalvarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE)))))
-                .addContainerGap())
+                        .addComponent(cbxDepCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(96, 96, 96)
+                        .addComponent(btnLimparCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnSalvarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 639, Short.MAX_VALUE))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnCancelarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(35, 35, 35))
+            .addComponent(jScrollPane3)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -333,37 +355,39 @@ public class Principal extends javax.swing.JFrame {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(29, 29, 29)
-                        .addComponent(jLabel6)
-                        .addGap(57, 57, 57)
-                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(cbxDepCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnLimparCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnSalvarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jLabel6))
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addComponent(btnCancelarCargo)))
+                        .addGap(15, 15, 15)
+                        .addComponent(btnCancelarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addGap(22, 22, 22)
+                        .addComponent(cbxDepCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnLimparCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnSalvarCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(18, 18, 18)
-                .addComponent(txtNomeCargo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(96, 96, 96)
+                .addComponent(txtNomeCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnExcluirCargo, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 440, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(195, 195, 195))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         paneDep.addTab("Cargo", jPanel3);
@@ -373,14 +397,14 @@ public class Principal extends javax.swing.JFrame {
 
             },
             new String [] {
-                "ID", "Nome", "Salario", "Departamento", "Cargo", "Data Admissao", "Data Saida"
+                "ID", "Nome", "Idade", "Salario", "Departamento", "Cargo", "Data Admissao", "Data Saida"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Long.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
+                java.lang.Long.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -405,13 +429,27 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
-        jLabel5.setText("Colaboradores");
+        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel5.setText("FUNCIONÁRIOS");
 
         btnCancelarFuncionario.setText("Cancelar");
         btnCancelarFuncionario.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelarFuncionarioActionPerformed(evt);
+            }
+        });
+
+        btnDesligarFuncionario.setText("Desligar funcionário");
+        btnDesligarFuncionario.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDesligarFuncionarioActionPerformed(evt);
+            }
+        });
+
+        btnImprimirFuncionarios.setText("Gerar relatório");
+        btnImprimirFuncionarios.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnImprimirFuncionariosActionPerformed(evt);
             }
         });
 
@@ -426,41 +464,39 @@ public class Principal extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1305, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1266, Short.MAX_VALUE)
-                .addContainerGap())
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(33, 33, 33)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGap(43, 43, 43)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnImprimirFuncionarios, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnRegistrarFuncionarios, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(btnExcluirFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btnDesligarFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnExcluirFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 259, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 298, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnCancelarFuncionario)))
-                .addGap(30, 30, 30))
+                        .addComponent(btnCancelarFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(25, 25, 25)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addComponent(btnCancelarFuncionario)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 241, Short.MAX_VALUE)
+                .addGap(19, 19, 19)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCancelarFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 112, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnExcluirFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnRegistrarFuncionarios, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnDesligarFuncionario, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnRegistrarFuncionarios, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnImprimirFuncionarios, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 440, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         paneDep.addTab("Funcionarios", jPanel2);
@@ -473,66 +509,40 @@ public class Principal extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(paneDep, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 851, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(paneDep, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void btnSalvarCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarCargoActionPerformed
-        try {
-            CargoDAO cDAO = new CargoDAO();
-
-            String nome = txtNomeCargo.getText();
-            Departamento dep = (Departamento) cbxDepCargo.getSelectedItem();
-
-            Cargo c = new Cargo();
-            c.setNome(nome);
-            c.setDepartamento(dep);
-
-            if (idCargoEdicao == null) {
-                //insert
-                cDAO.inserir(c);
-            } else {
-                //update
-                c.setId(idCargoEdicao);
-                cDAO.atualizar(c);
-            }
-
-            atualizarTabelaCargo();
-            txtNomeCargo.setText("");
-            cbxDepCargo.setSelectedIndex(0);
-            idCargoEdicao = null;
-
-            JOptionPane.showMessageDialog(this, "Cargo salvo com sucesso!");
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar cargo: " + e.getMessage());
-        }
-    }//GEN-LAST:event_btnSalvarCargoActionPerformed
-
-    private void txtNomeCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNomeCargoActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtNomeCargoActionPerformed
 
     private void btnSalvarDepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarDepActionPerformed
         try {
             DepartamentoDAO dDAO = new DepartamentoDAO();
 
             String nome = txtNomeDep.getText();
-  
+
+            if (nome == null || nome.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "O nome do departamento não pode estar vazio.",
+                    "Validação",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return; 
+            }
+
             if (idDepartamentoEdicao == null) {
                 //insert
                 Departamento d = new Departamento();
-                d.setNome(nome);
+                d.setNome(nome.trim());
                 dDAO.inserir(d);
-
             } else {
                 //update
-                Departamento d = new Departamento(idDepartamentoEdicao, nome);
+                Departamento d = new Departamento(idDepartamentoEdicao, nome.trim());
                 dDAO.atualizar(d);
             }
 
+            carregarCombos();
             atualizarTabelaDep();
             limparCampos();
             idDepartamentoEdicao = null;
@@ -540,17 +550,12 @@ public class Principal extends javax.swing.JFrame {
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar departamento");
         }
+
     }//GEN-LAST:event_btnSalvarDepActionPerformed
 
     private void txtNomeDepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNomeDepActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtNomeDepActionPerformed
-
-    private void btnLimparCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparCargoActionPerformed
-        txtNomeCargo.setText("");
-        cbxDepCargo.setSelectedIndex(0);
-        idCargoEdicao = null;
-    }//GEN-LAST:event_btnLimparCargoActionPerformed
 
     private void btnLimparDepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparDepActionPerformed
         txtNomeDep.setText("");
@@ -571,34 +576,65 @@ public class Principal extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_btnCancelarDepActionPerformed
 
-    private void btnCancelarCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarCargoActionPerformed
-        new Login().setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_btnCancelarCargoActionPerformed
-
     private void btnCancelarFuncionarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarFuncionarioActionPerformed
         new Login().setVisible(true);
         this.dispose();
     }//GEN-LAST:event_btnCancelarFuncionarioActionPerformed
 
-    private void btnExcluirFuncionarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirFuncionarioActionPerformed
+    private void btnDesligarFuncionarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDesligarFuncionarioActionPerformed
         int linhaSelecionada = tblFuncionarios.getSelectedRow();
-        if (linhaSelecionada >= 0) {
-            
-            int idFuncionario = (int) tblFuncionarios.getValueAt(linhaSelecionada, 0);
-            fDAO.excluir(idFuncionario);
 
-            try {
-                atualizarTabelaFuncionario();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                javax.swing.JOptionPane.showMessageDialog(this, "Erro ao atualizar tabela: " + ex.getMessage());
+        if (linhaSelecionada >= 0) {
+
+            int idFuncionario = (int) tblFuncionarios.getValueAt(linhaSelecionada, 0);
+            int idUsuarioLogado = 1;
+
+            int opcao = javax.swing.JOptionPane.showConfirmDialog(
+                this,
+                "Tem certeza que deseja desligar este funcionário?",
+                "Confirmar desligamento",
+                javax.swing.JOptionPane.YES_NO_OPTION
+            );
+
+            if (opcao == javax.swing.JOptionPane.YES_OPTION) {
+                try {
+                    fDAO.desligarFuncionario(idFuncionario, idUsuarioLogado);
+
+                    javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Funcionário desligado com sucesso!"
+                    );
+
+                    atualizarTabelaFuncionario();
+                    limparCampos();
+
+                } catch (SQLException ex) {
+
+                    if (ex.getMessage().contains("Funcionário já está desligado")) {
+                        javax.swing.JOptionPane.showMessageDialog(
+                            this,
+                            "Este funcionário já está desligado.",
+                            "Aviso",
+                            javax.swing.JOptionPane.WARNING_MESSAGE
+                        );
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(
+                            this,
+                            "Erro ao desligar funcionário: " + ex.getMessage(),
+                            "Erro",
+                            javax.swing.JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
             }
-            limparCampos();
+
         } else {
-            javax.swing.JOptionPane.showMessageDialog(this, "Selecione um funcionário para excluir!");
+            javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Selecione um funcionário para desligar!"
+            );
         } 
-    }//GEN-LAST:event_btnExcluirFuncionarioActionPerformed
+    }//GEN-LAST:event_btnDesligarFuncionarioActionPerformed
 
     private void btnExcluirDepartamentoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirDepartamentoActionPerformed
         int linhaSelecionada = tblDep.getSelectedRow();
@@ -621,75 +657,35 @@ public class Principal extends javax.swing.JFrame {
         } 
     }//GEN-LAST:event_btnExcluirDepartamentoActionPerformed
 
-    private void btnExcluirCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirCargoActionPerformed
-        int linhaSelecionada = tblCargo.getSelectedRow();
-        if (linhaSelecionada >= 0) {
-            int id = (int) tblCargo.getValueAt(linhaSelecionada, 0);
-
-            cargoDAO.excluir(id);
-            
-            try {
-                atualizarTabelaCargo();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                javax.swing.JOptionPane.showMessageDialog(this, "Erro ao atualizar tabela: " + ex.getMessage());
-            }
-            limparCampos();
-        } else {
-            javax.swing.JOptionPane.showMessageDialog(this, "Selecione um cargo para excluir!");
-        } 
-    }//GEN-LAST:event_btnExcluirCargoActionPerformed
-
     private void tblDepMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblDepMouseClicked
-        if (evt.getClickCount() != 2) return; // só trata duplo clique
+        if (evt.getClickCount() != 2) return;
 
-        // 1) pega a linha visual
         int viewRow = tblDep.getSelectedRow();
         if (viewRow == -1) {
             viewRow = tblDep.rowAtPoint(evt.getPoint());
         }
-        if (viewRow < 0) {
-            System.out.println("tblDepMouseClicked: nenhuma linha encontrada");
-            return;
-        }
+        if (viewRow < 0) return;
+
         int modelRow = tblDep.convertRowIndexToModel(viewRow);
 
-        int colCount = tblDep.getColumnCount();
-        int colId = -1, colNome = -1;
-        for (int c = 0; c < colCount; c++) {
-            String colName = tblDep.getColumnName(c);
-            if (colName == null) continue;
-            String n = colName.trim().toLowerCase();
-            if (colId == -1 && (n.equals("id") || n.contains("id"))) colId = c;
-            if (colNome == -1 && (n.equals("nome") || n.contains("nome") || n.contains("name"))) colNome = c;
-        }
+        Object idObj = tblDep.getModel().getValueAt(modelRow, 0);
+        Object nomeObj = tblDep.getModel().getValueAt(modelRow, 1);
 
-        if (colId == -1 && colCount >= 1) colId = 0;
-        if (colNome == -1 && colCount >= 2) colNome = 1;
-
-        Object idObj = tblDep.getModel().getValueAt(modelRow, colId);
-        Object nomeObj = tblDep.getModel().getValueAt(modelRow, colNome);
-
-        if (idObj == null) {
-            System.out.println("tblDep: idObj == null");
-            return;
-        }
-        if (nomeObj == null) {
-            System.out.println("tblDep: nomeObj == null");
-            return;
-        }
+        if (idObj == null || nomeObj == null) return;
 
         try {
             int id = Integer.parseInt(idObj.toString());
             String nome = nomeObj.toString();
 
+            // 🔴 LINHA QUE FALTAVA
+            idDepartamentoEdicao = id;
 
             txtNomeDep.setText(nome);
 
-            System.out.printf("Carregado departamento id=%d nome=%s%n", id, nome);
+            System.out.printf("Editando departamento id=%d nome=%s%n", id, nome);
 
         } catch (NumberFormatException ex) {
-            System.out.println("tblDep: erro parse id -> " + ex.getMessage());
+            System.out.println("Erro ao converter ID -> " + ex.getMessage());
         }
     }//GEN-LAST:event_tblDepMouseClicked
 
@@ -724,6 +720,75 @@ public class Principal extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_tblFuncionariosMouseClicked
 
+    private void btnImprimirFuncionariosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnImprimirFuncionariosActionPerformed
+        gerarRelatorio("rel_funcionarios");
+    }//GEN-LAST:event_btnImprimirFuncionariosActionPerformed
+
+    private void btnExcluirFuncionarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirFuncionarioActionPerformed
+        int row = tblFuncionarios.getSelectedRow();
+
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione um funcionário.");
+            return;
+        }
+
+        int id = (int) tblFuncionarios.getValueAt(row, 0);
+        Object dataSaidaObj = tblFuncionarios.getValueAt(row, 6); // coluna data_saida
+
+        if (dataSaidaObj == null) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Não é possível excluir um funcionário ativo.\n\nRealize o desligamento primeiro.",
+                "Exclusão não permitida",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+            this,
+            "Deseja realmente excluir este funcionário?\nEssa ação é irreversível.",
+            "Confirmar exclusão",
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        FuncionarioDAO dao = new FuncionarioDAO();
+        dao.excluir(id);
+
+        JOptionPane.showMessageDialog(this, "Funcionário excluído com sucesso.");
+        try {
+            atualizarTabelaFuncionario();
+        } catch (SQLException ex) {
+            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnExcluirFuncionarioActionPerformed
+
+    private void btnExcluirCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirCargoActionPerformed
+        int linhaSelecionada = tblCargo.getSelectedRow();
+        if (linhaSelecionada >= 0) {
+            int id = (int) tblCargo.getValueAt(linhaSelecionada, 0);
+
+            cargoDAO.excluir(id);
+
+            try {
+                atualizarTabelaCargo();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(this, "Erro ao atualizar tabela: " + ex.getMessage());
+            }
+            limparCampos();
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this, "Selecione um cargo para excluir!");
+        }
+    }//GEN-LAST:event_btnExcluirCargoActionPerformed
+
+    private void btnCancelarCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarCargoActionPerformed
+        new Login().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCancelarCargoActionPerformed
+
     private void tblCargoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCargoMouseClicked
         if (evt.getClickCount() == 2) {
             int viewRow = tblCargo.getSelectedRow();
@@ -749,6 +814,66 @@ public class Principal extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_tblCargoMouseClicked
+
+    private void btnLimparCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparCargoActionPerformed
+        txtNomeCargo.setText("");
+        cbxDepCargo.setSelectedIndex(0);
+        idCargoEdicao = null;
+    }//GEN-LAST:event_btnLimparCargoActionPerformed
+
+    private void txtNomeCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNomeCargoActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtNomeCargoActionPerformed
+
+    private void btnSalvarCargoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarCargoActionPerformed
+        try {
+            CargoDAO cDAO = new CargoDAO();
+
+            String nome = txtNomeCargo.getText();
+            Departamento dep = (Departamento) cbxDepCargo.getSelectedItem();
+
+            if (nome == null || nome.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "O nome do cargo não pode estar vazio.",
+                    "Validação",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            if (dep == null || dep.getId() == 0) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Selecione um departamento válido.",
+                    "Validação",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            Cargo c = new Cargo();
+            c.setNome(nome.trim());
+            c.setDepartamento(dep);
+
+            if (idCargoEdicao == null) {
+                // INSERT
+                cDAO.inserir(c);
+            } else {
+                // UPDATE
+                c.setId(idCargoEdicao);
+                cDAO.atualizar(c);
+            }
+
+            atualizarTabelaCargo();
+            txtNomeCargo.setText("");
+            cbxDepCargo.setSelectedIndex(0);
+            idCargoEdicao = null;
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar cargo: " + e.getMessage());
+        }
+    }//GEN-LAST:event_btnSalvarCargoActionPerformed
 
     /**
      * @param args the command line arguments
@@ -793,9 +918,11 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JButton btnCancelarCargo;
     private javax.swing.JButton btnCancelarDep;
     private javax.swing.JButton btnCancelarFuncionario;
+    private javax.swing.JButton btnDesligarFuncionario;
     private javax.swing.JButton btnExcluirCargo;
     private javax.swing.JButton btnExcluirDepartamento;
     private javax.swing.JButton btnExcluirFuncionario;
+    private javax.swing.JButton btnImprimirFuncionarios;
     private javax.swing.JButton btnLimparCargo;
     private javax.swing.JButton btnLimparDep;
     private javax.swing.JButton btnRegistrarFuncionarios;
@@ -822,6 +949,18 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JTextField txtNomeDep;
     // End of variables declaration//GEN-END:variables
  
+    private void gerarRelatorio(String tipo) {
+        try {
+            Connection con = Conexao.getConnection();
+            Map<String, Object> parametros = new HashMap<>();
+
+            RelatorioUtil.abrirPDF(tipo, parametros, con);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     public void atualizarTabelaFuncionario() throws SQLException {
         DefaultTableModel tabela = (DefaultTableModel) tblFuncionarios.getModel();
         tabela.setRowCount(0);
@@ -836,6 +975,7 @@ public class Principal extends javax.swing.JFrame {
             tabela.addRow(new Object[]{
                 f.getId(),
                 f.getNome(),
+                f.getIdade(),
                 f.getSalario(),
                 f.getCargo().getDepartamento().getNome(),
                 f.getCargo().getNome(),
@@ -879,36 +1019,49 @@ public class Principal extends javax.swing.JFrame {
             tabela.addRow(new Object[]{
                 c.getId(),
                 c.getNome(),
-                c.getDepartamento().getId()
+                c.getDepartamento().getId(),
+                c.getDepartamento().getNome()
             });
         }
     }
 
     public void configurarTabelas() {
-        tblFuncionarios.getColumnModel().getColumn(0).setPreferredWidth(25); 
-        tblFuncionarios.getColumnModel().getColumn(1).setPreferredWidth(120); 
-        tblFuncionarios.getColumnModel().getColumn(2).setPreferredWidth(80); 
-        tblFuncionarios.getColumnModel().getColumn(3).setPreferredWidth(100); 
-        tblFuncionarios.getColumnModel().getColumn(4).setPreferredWidth(200); 
-        tblFuncionarios.getColumnModel().getColumn(5).setPreferredWidth(100); 
-        tblFuncionarios.getColumnModel().getColumn(6).setPreferredWidth(100); 
 
+        // Renderers
+        DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
+        centro.setHorizontalAlignment(SwingConstants.CENTER);
 
         DefaultTableCellRenderer esquerda = new DefaultTableCellRenderer();
         esquerda.setHorizontalAlignment(SwingConstants.LEFT);
-        tblFuncionarios.getColumnModel().getColumn(0).setCellRenderer(esquerda);
-        
-        tblDep.getColumnModel().getColumn(0).setPreferredWidth(25); 
-        tblDep.getColumnModel().getColumn(1).setPreferredWidth(120); 
-        esquerda.setHorizontalAlignment(SwingConstants.LEFT);
-        tblDep.getColumnModel().getColumn(0).setCellRenderer(esquerda);
 
-        tblCargo.getColumnModel().getColumn(0).setPreferredWidth(25); 
-        tblCargo.getColumnModel().getColumn(1).setPreferredWidth(120); 
-        tblCargo.getColumnModel().getColumn(2).setPreferredWidth(80); 
-        esquerda.setHorizontalAlignment(SwingConstants.LEFT);
-        tblCargo.getColumnModel().getColumn(0).setCellRenderer(esquerda);
+        // ================= FUNCIONÁRIOS =================
+        configurarColuna(tblFuncionarios, 0, 15, centro);   // ID
+        configurarColuna(tblFuncionarios, 1, 160, centro); // Nome
+        configurarColuna(tblFuncionarios, 2, 80, centro);   // Idade
+        configurarColuna(tblFuncionarios, 3, 100, centro);  // Salário
+        configurarColuna(tblFuncionarios, 4, 140, centro);  // Departamento
+        configurarColuna(tblFuncionarios, 5, 160, centro);  // Cargo
+        configurarColuna(tblFuncionarios, 6, 120, centro);  // Data admissão
+        configurarColuna(tblFuncionarios, 7, 120, centro);  // Data saída
+
+        // ================= DEPARTAMENTO =================
+        configurarColuna(tblDep, 0, 15, centro);     // ID
+        configurarColuna(tblDep, 1, 220, centro);  // Nome
+
+        // ================= CARGO =================
+        configurarColuna(tblCargo, 0, 15, centro);     // ID
+        configurarColuna(tblCargo, 1, 220, centro);  // Nome
+        configurarColuna(tblCargo, 2, 15, centro);    // Departamento ID
+        configurarColuna(tblCargo, 3, 220, centro);  // Nome
     }
+    
+    private void configurarColuna(JTable tabela, int indice, int largura, TableCellRenderer renderer) {
+        TableColumn coluna = tabela.getColumnModel().getColumn(indice);
+        coluna.setPreferredWidth(largura);
+        coluna.setMinWidth(largura);
+        coluna.setCellRenderer(renderer);
+    }
+
 
     private void limparCampos() {
         txtNomeDep.setText("");
@@ -923,7 +1076,59 @@ public class Principal extends javax.swing.JFrame {
             cbxDepCargo.addItem(d);
         }
     }
+    
+    private void estilizarCabecalho(JTable tabela) {
+        JTableHeader header = tabela.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setPreferredSize(new Dimension(header.getWidth(), 36));
+    }
 
+
+    private void estilizarTabela(JTable tabela) {
+
+        tabela.setShowGrid(false);
+        tabela.setRowHeight(32);
+        tabela.setIntercellSpacing(new Dimension(0, 0));
+        tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        tabela.putClientProperty("Table.alternateRowColor", true);
+        tabela.putClientProperty("Table.showHorizontalLines", false);
+        tabela.putClientProperty("Table.showVerticalLines", false);
+
+        tabela.getTableHeader().setReorderingAllowed(false);
+        tabela.getTableHeader().setResizingAllowed(true);
+
+        tabela.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    }
+
+    private void configurarTabelaDepartamento() {
+
+        DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
+        centro.setHorizontalAlignment(SwingConstants.CENTER);
+
+        DefaultTableCellRenderer esquerda = new DefaultTableCellRenderer();
+        esquerda.setHorizontalAlignment(SwingConstants.LEFT);
+
+        TableColumn colId = tblDep.getColumnModel().getColumn(0);
+        colId.setMinWidth(60);
+        colId.setMaxWidth(60);
+        colId.setPreferredWidth(60);
+        colId.setCellRenderer(centro);
+
+        TableColumn colNome = tblDep.getColumnModel().getColumn(1);
+        colNome.setPreferredWidth(600);
+        colNome.setCellRenderer(centro);
+    }
+
+    private void configurarPlaceholders() {
+        ConfiguraComponentes ui = new ConfiguraComponentes();
+
+        // Departamento
+        ui.configCampoTexto(txtNomeDep, " Nome do departamento");
+
+        // Cargo
+        ui.configCampoTexto(txtNomeCargo, " Nome do cargo");
+    }
 
     
 }

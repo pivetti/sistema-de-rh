@@ -15,13 +15,15 @@ import javax.swing.JOptionPane;
  *
  * @author Pichau
  */
-public class Cadastro extends javax.swing.JFrame {
+public class Cadastro extends TelaBase {
 
     private ConfiguraComponentes cf = new ConfiguraComponentes();
     private ValidaCampos validaCampos = new ValidaCampos();
     
     public Cadastro() {
         initComponents();
+        configurarTela16x9();
+        aplicarEstilo();
         configCampos();
         setLocationRelativeTo(this);
         setResizable(false);
@@ -29,6 +31,8 @@ public class Cadastro extends javax.swing.JFrame {
     
     public Cadastro(ArrayList<Usuario> listaUsuarios) {
         initComponents();
+        configurarTela16x9();
+        aplicarEstilo();
         configCampos();
         setLocationRelativeTo(this);
         setResizable(false);
@@ -55,11 +59,11 @@ public class Cadastro extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        psfConfirmarSenha.setBorder(javax.swing.BorderFactory.createTitledBorder("Confirmar Senha"));
+        psfConfirmarSenha.setBorder(null);
 
         btnSalvar.setFont(new java.awt.Font("Engravers MT", 0, 12)); // NOI18N
         btnSalvar.setText("Salvar");
-        btnSalvar.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        btnSalvar.setBorder(null);
         btnSalvar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSalvarActionPerformed(evt);
@@ -68,14 +72,19 @@ public class Cadastro extends javax.swing.JFrame {
 
         btnCancelar.setFont(new java.awt.Font("Engravers MT", 0, 12)); // NOI18N
         btnCancelar.setText("Cancelar");
-        btnCancelar.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        btnCancelar.setBorder(null);
         btnCancelar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelarActionPerformed(evt);
             }
         });
 
-        txtNomeCompleto.setBorder(javax.swing.BorderFactory.createTitledBorder("Nome Completo"));
+        txtNomeCompleto.setBorder(null);
+        txtNomeCompleto.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtNomeCompletoActionPerformed(evt);
+            }
+        });
 
         cbxMostrarSenha.setText("Mostrar Senha");
         cbxMostrarSenha.addActionListener(new java.awt.event.ActionListener() {
@@ -92,11 +101,18 @@ public class Cadastro extends javax.swing.JFrame {
         });
 
         jLabel1.setFont(new java.awt.Font("Engravers MT", 1, 24)); // NOI18N
-        jLabel1.setText("Cadastro");
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("CADASTRO");
+        jLabel1.setAlignmentY(0.0F);
 
-        txtEmail.setBorder(javax.swing.BorderFactory.createTitledBorder("Email"));
+        txtEmail.setBorder(null);
+        txtEmail.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtEmailActionPerformed(evt);
+            }
+        });
 
-        psfSenha.setBorder(javax.swing.BorderFactory.createTitledBorder("Senha"));
+        psfSenha.setBorder(null);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -105,53 +121,50 @@ public class Cadastro extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(txtNomeCompleto, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(366, 366, 366)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(psfSenha, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(psfConfirmarSenha, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(psfConfirmarSenha, javax.swing.GroupLayout.PREFERRED_SIZE, 330, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cbxMostrarConfirmar))
+                            .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 466, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtNomeCompleto, javax.swing.GroupLayout.PREFERRED_SIZE, 466, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(47, 47, 47)
-                                .addComponent(btnSalvar, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(33, 33, 33)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(cbxMostrarConfirmar)
-                            .addComponent(cbxMostrarSenha))))
-                .addContainerGap(280, Short.MAX_VALUE))
+                                .addComponent(psfSenha, javax.swing.GroupLayout.PREFERRED_SIZE, 330, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cbxMostrarSenha))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(240, 240, 240)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 716, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(497, 497, 497)
+                        .addComponent(btnSalvar, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(32, 32, 32)
+                        .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(324, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(18, 18, 18)
+                .addGap(43, 43, 43)
                 .addComponent(jLabel1)
-                .addGap(39, 39, 39)
-                .addComponent(txtNomeCompleto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(19, 19, 19)
-                .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(psfSenha, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtNomeCompleto, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(psfSenha, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cbxMostrarSenha))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cbxMostrarConfirmar)
-                    .addComponent(psfConfirmarSenha, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(40, 40, 40)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnSalvar, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE)
-                    .addComponent(btnCancelar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(203, 203, 203))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(psfConfirmarSenha, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cbxMostrarConfirmar))
+                .addGap(35, 35, 35)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSalvar, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(364, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -199,6 +212,14 @@ public class Cadastro extends javax.swing.JFrame {
         String senha =  String.valueOf(psfSenha.getPassword());
         cf.configCheckBox(cbxMostrarConfirmar, psfConfirmarSenha, "Senha", senha );
     }//GEN-LAST:event_cbxMostrarConfirmarActionPerformed
+
+    private void txtEmailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtEmailActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtEmailActionPerformed
+
+    private void txtNomeCompletoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNomeCompletoActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtNomeCompletoActionPerformed
 
     /**
      * @param args the command line arguments
@@ -249,10 +270,10 @@ public class Cadastro extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     private void configCampos() {
-        cf.configCampoTexto(txtNomeCompleto, "Nome Completo");
-        cf.configCampoTexto(txtEmail, "Email"); 
-        cf.configCampoSenha(psfSenha, "Senha");
-        cf.configCampoSenha(psfConfirmarSenha, "Confirmar senha");
+        cf.configCampoTexto(txtNomeCompleto, " Nome Completo");
+        cf.configCampoTexto(txtEmail, " Email"); 
+        cf.configCampoSenha(psfSenha, " Senha");
+        cf.configCampoSenha(psfConfirmarSenha, " Confirmar senha");
     }
     
     private Usuario retornaUsuario() {
@@ -278,10 +299,10 @@ public class Cadastro extends javax.swing.JFrame {
     private boolean validaCampos(){
         boolean resultado =  true;
         
-        if(validaCampos.validaTextField(txtNomeCompleto, "Nome Completo")) resultado = false;
-        if(validaCampos.validaTextField(txtEmail, "Email")) resultado = false;
-        if(validaCampos.validaPasswordField(psfSenha, "Senha")) resultado = false;
-        if(validaCampos.validaPasswordField(psfConfirmarSenha, "Confirmar senha")) resultado = false;
+        if(validaCampos.validaTextField(txtNomeCompleto, " Nome Completo")) resultado = false;
+        if(validaCampos.validaTextField(txtEmail, " Email")) resultado = false;
+        if(validaCampos.validaPasswordField(psfSenha, " Senha")) resultado = false;
+        if(validaCampos.validaPasswordField(psfConfirmarSenha, " Confirmar senha")) resultado = false;
         
         String senha = String.valueOf(psfSenha.getPassword());
         String confirmarSenha = String.valueOf(psfConfirmarSenha.getPassword());
@@ -293,4 +314,33 @@ public class Cadastro extends javax.swing.JFrame {
         
         return resultado;
     }
+    
+    private void aplicarEstilo() {
+
+        // CARD
+        jPanel1.putClientProperty("FlatLaf.style",
+            "background: $Panel.background;" +
+            "arc: 20"
+        );
+        jPanel1.setBorder(
+            javax.swing.BorderFactory.createEmptyBorder(30, 40, 30, 40)
+        );
+
+        // TÍTULO
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 26));
+
+        // CAMPOS
+        txtNomeCompleto.setPreferredSize(new java.awt.Dimension(280, 38));
+        txtEmail.setPreferredSize(new java.awt.Dimension(280, 38));
+        psfSenha.setPreferredSize(new java.awt.Dimension(280, 38));
+        psfConfirmarSenha.setPreferredSize(new java.awt.Dimension(280, 38));
+
+        // LIMPA FOREGROUND FIXO
+        txtNomeCompleto.setForeground(null);
+        txtEmail.setForeground(null);
+        psfSenha.setForeground(null);
+        psfConfirmarSenha.setForeground(null);
+    }
+
+    
 }

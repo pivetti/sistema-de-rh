@@ -12,9 +12,11 @@ public class Funcionario {
 
     private int id;
     private String nome;
+    private int idade;
     private double salario;
     private LocalDate dataEntrada;
     private LocalDate dataSaida;
+    
 
     private Cargo cargo;
     private List<Endereco> enderecos;  
@@ -25,11 +27,12 @@ public class Funcionario {
         contatos = new ArrayList<>();
     }
 
-    public Funcionario(int id, String nome, double salario, LocalDate dataEntrada, LocalDate dataSaida,
+    public Funcionario(int id, String nome, int idade, double salario, LocalDate dataEntrada, LocalDate dataSaida,
                        Cargo cargo) {
         this();
         this.id = id;
         this.nome = nome;
+        this.idade = idade;
         this.salario = salario;
         this.dataEntrada = dataEntrada;
         this.dataSaida = dataSaida;
@@ -50,6 +53,14 @@ public class Funcionario {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+    
+    public int getIdade() {
+        return idade;
+    }
+
+    public void setIdade(int idade) {
+        this.idade = idade;
     }
 
     public double getSalario() {
@@ -116,11 +127,10 @@ public class Funcionario {
 
     @Override
     public String toString() {
-        return "Funcionario{" + "id=" + id + ", nome=" + nome + ", salario=" + salario +
-               ", dataEntrada=" + dataEntrada + ", dataSaida=" + dataSaida +
-               ", cargo=" + cargo + ", enderecos=" + enderecos +
-               ", contatos=" + contatos + '}';
+        return "Funcionario{" + "id=" + id + ", nome=" + nome + ", idade=" + idade + ", salario=" + salario + ", dataEntrada=" + dataEntrada + ", dataSaida=" + dataSaida + ", cargo=" + cargo + ", enderecos=" + enderecos + ", contatos=" + contatos + '}';
     }
+
+    
 
 }
 

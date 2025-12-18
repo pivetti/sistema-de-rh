@@ -17,17 +17,56 @@ import com.mycompany.sistemarh.model.Funcionario;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class FuncionarioDAO {
+    
+    public void desligarFuncionario(int idFuncionario, int idUsuario) throws SQLException {
+        String sql = "CALL sp_desligar_funcionario(?, ?)";
+
+        try (Connection con = Conexao.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idFuncionario);
+            ps.setInt(2, idUsuario);
+            ps.execute();
+
+        }
+    }
+
 
     public void inserir(Funcionario f) {
+
+        if (f.getNome() == null || f.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do funcionário não pode ser vazio.");
+        }
+
+        if (f.getIdade() < 18 || f.getIdade() > 75) {
+            throw new IllegalArgumentException("Idade deve estar entre 18 e 75 anos.");
+        }
+
+        if (f.getSalario() < 0) {
+            throw new IllegalArgumentException("Salário não pode ser negativo.");
+        }
+
+        if (f.getCargo() == null || f.getCargo().getId() <= 0) {
+            throw new IllegalArgumentException("Cargo inválido.");
+        }
+
+        if (f.getDataEntrada() == null) {
+            throw new IllegalArgumentException("Data de entrada não pode ser nula.");
+        }
+
+        // Verifica se a data de saída é anterior à de entrada
+        if (f.getDataSaida() != null && f.getDataSaida().isBefore(f.getDataEntrada())) {
+            throw new IllegalArgumentException("A data de saída não pode ser anterior à data de entrada.");
+        }
+
         String sql = """
-            INSERT INTO tb_funcionario (nome, salario, data_entrada, data_saida, id_cargo)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO tb_funcionario (nome, idade, salario, data_entrada, data_saida, id_cargo)
+            VALUES (?, ?, ?, ?, ?, ?)
             RETURNING id
         """;
 
@@ -35,21 +74,24 @@ public class FuncionarioDAO {
             Connection con = Conexao.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)
         ) {
+
             ps.setString(1, f.getNome());
-            ps.setBigDecimal(2, BigDecimal.valueOf(f.getSalario()));
-            ps.setDate(3, Date.valueOf(f.getDataEntrada()));
+            ps.setInt(2, f.getIdade());
+            ps.setBigDecimal(3, BigDecimal.valueOf(f.getSalario()));
+            ps.setDate(4, Date.valueOf(f.getDataEntrada()));
 
             if (f.getDataSaida() != null)
-                ps.setDate(4, Date.valueOf(f.getDataSaida()));
+                ps.setDate(5, Date.valueOf(f.getDataSaida()));
             else
-                ps.setNull(4, Types.DATE);
+                ps.setNull(5, Types.DATE);
 
-            ps.setInt(5, f.getCargo().getId());
+            ps.setInt(6, f.getCargo().getId());
 
             ResultSet rs = ps.executeQuery();
             rs.next();
             int idFuncionario = rs.getInt("id");
 
+            // ENDEREÇOS
             String sqlEnd = """
                 INSERT INTO tb_endereco 
                     (rua, numero, bairro, cep, cidade, estado, ativo, id_funcionario)
@@ -99,6 +141,7 @@ public class FuncionarioDAO {
             SELECT 
                 f.id AS func_id,
                 f.nome AS func_nome,
+                f.idade,
                 f.salario,
                 f.data_entrada,
                 f.data_saida,
@@ -158,6 +201,7 @@ public class FuncionarioDAO {
                     f = new Funcionario();
                     f.setId(idFunc);
                     f.setNome(rs.getString("func_nome"));
+                    f.setIdade(rs.getInt("idade"));
                     f.setSalario(rs.getDouble("salario"));
 
                     Date e1 = rs.getDate("data_entrada");
@@ -220,13 +264,20 @@ public class FuncionarioDAO {
     
     
     public void excluir(int id) {
-        //apagar as constraints FK
         String sqlEnd = "DELETE FROM tb_endereco WHERE id_funcionario = ?";
         String sqlCont = "DELETE FROM tb_contato WHERE id_funcionario = ?";
         String sqlFunc = "DELETE FROM tb_funcionario WHERE id = ?";
+        String sqlLog = "DELETE FROM tb_log WHERE id_funcionario = ?";
+
 
         try (Connection con = Conexao.getConnection()) {
-            
+            con.setAutoCommit(false);
+
+            try (PreparedStatement ps = con.prepareStatement(sqlLog)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
             try (PreparedStatement ps = con.prepareStatement(sqlEnd)) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
@@ -242,8 +293,10 @@ public class FuncionarioDAO {
                 ps.executeUpdate();
             }
 
-        } catch (SQLException e) {
-            System.out.println("Erro ao excluir funcionário -> " + e);
+            con.commit();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
         }
     }
     
@@ -253,7 +306,32 @@ public class FuncionarioDAO {
     
 
     public void atualizar(Funcionario f) throws SQLException {
-        String sqlUpdateFunc = "UPDATE tb_funcionario SET nome = ?, salario = ?, data_entrada = ?, data_saida = ?, id_cargo = ? WHERE id = ?";
+
+        if (f.getNome() == null || f.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do funcionário não pode ser vazio.");
+        }
+
+        if (f.getIdade() < 18 || f.getIdade() > 75) {
+            throw new IllegalArgumentException("A idade deve estar entre 18 e 75 anos.");
+        }
+
+        if (f.getSalario() < 0) {
+            throw new IllegalArgumentException("O salário não pode ser negativo.");
+        }
+
+        if (f.getCargo() == null || f.getCargo().getId() <= 0) {
+            throw new IllegalArgumentException("Cargo inválido.");
+        }
+
+        if (f.getDataEntrada() == null) {
+            throw new IllegalArgumentException("A data de entrada não pode ser nula.");
+        }
+
+        if (f.getDataSaida() != null && f.getDataSaida().isBefore(f.getDataEntrada())) {
+            throw new IllegalArgumentException("A data de saída não pode ser anterior à data de entrada.");
+        }
+        
+        String sqlUpdateFunc = "UPDATE tb_funcionario SET nome = ?, idade = ?, salario = ?, data_entrada = ?, data_saida = ?, id_cargo = ? WHERE id = ?";
 
         Connection con = null;
         try {
@@ -263,11 +341,12 @@ public class FuncionarioDAO {
             // 1) Atualiza funcionário
             try (PreparedStatement ps = con.prepareStatement(sqlUpdateFunc)) {
                 ps.setString(1, f.getNome());
-                ps.setDouble(2, f.getSalario());
-                ps.setDate(3, Date.valueOf(f.getDataEntrada()));
-                if (f.getDataSaida() != null) ps.setDate(4, Date.valueOf(f.getDataSaida())); else ps.setNull(4, Types.DATE);
-                ps.setInt(5, f.getCargo().getId());
-                ps.setInt(6, f.getId());
+                ps.setInt(2, f.getIdade());
+                ps.setDouble(3, f.getSalario());
+                ps.setDate(4, Date.valueOf(f.getDataEntrada()));
+                if (f.getDataSaida() != null) ps.setDate(5, Date.valueOf(f.getDataSaida())); else ps.setNull(5, Types.DATE);
+                ps.setInt(6, f.getCargo().getId());
+                ps.setInt(7, f.getId());
                 ps.executeUpdate();
             }
 
@@ -407,9 +486,18 @@ public class FuncionarioDAO {
     public Funcionario buscarPorId(int id) {
         String sql = """
             SELECT 
-                f.id AS func_id, f.nome AS func_nome, f.salario, f.data_entrada, f.data_saida,
-                c.id AS cargo_id, c.nome AS cargo_nome,
-                d.id AS dep_id, d.nome AS dep_nome
+                f.id AS func_id, 
+                f.nome AS func_nome, 
+                f.salario, 
+                f.data_entrada, 
+                f.data_saida,
+                f.idade,                -- >>> ADICIONADO AQUI <<<
+
+                c.id AS cargo_id, 
+                c.nome AS cargo_nome,
+
+                d.id AS dep_id, 
+                d.nome AS dep_nome
             FROM tb_funcionario f
             JOIN tb_cargo c ON f.id_cargo = c.id
             JOIN tb_departamento d ON c.id_departamento = d.id
@@ -422,19 +510,36 @@ public class FuncionarioDAO {
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, id);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Departamento dep = new Departamento(rs.getInt("dep_id"), rs.getString("dep_nome"));
-                    Cargo cargo = new Cargo(rs.getInt("cargo_id"), rs.getString("cargo_nome"), dep);
+
+                    Departamento dep = new Departamento(
+                        rs.getInt("dep_id"), 
+                        rs.getString("dep_nome")
+                    );
+
+                    Cargo cargo = new Cargo(
+                        rs.getInt("cargo_id"), 
+                        rs.getString("cargo_nome"), 
+                        dep
+                    );
 
                     f = new Funcionario();
                     f.setId(rs.getInt("func_id"));
                     f.setNome(rs.getString("func_nome"));
                     f.setSalario(rs.getDouble("salario"));
+
                     Date d1 = rs.getDate("data_entrada");
                     if (d1 != null) f.setDataEntrada(d1.toLocalDate());
+
                     Date d2 = rs.getDate("data_saida");
                     if (d2 != null) f.setDataSaida(d2.toLocalDate());
+
+                    // >>> AQUI <<< (implementação da idade)
+                    f.setIdade(rs.getInt("idade"));  
+                    // Se no banco idade puder ser null, use rs.getObject()
+
                     f.setCargo(cargo);
                 }
             }
