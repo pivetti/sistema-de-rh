@@ -1,0 +1,435 @@
+DROP TRIGGER IF EXISTS tg_log_funcionario_insert ON tb_funcionario;
+DROP TRIGGER IF EXISTS tg_validar_salario ON tb_funcionario;
+
+DROP FUNCTION IF EXISTS trg_log_funcionario_insert();
+DROP FUNCTION IF EXISTS trg_validar_salario();
+
+DROP FUNCTION IF EXISTS fn_total_funcionarios_departamento(INT);
+DROP FUNCTION IF EXISTS fn_funcionarios_por_departamento(INT);
+
+DROP PROCEDURE IF EXISTS sp_cadastrar_funcionario_completo;
+DROP PROCEDURE IF EXISTS sp_desligar_funcionario;
+
+DROP MATERIALIZED VIEW IF EXISTS vw_estatisticas_departamento;
+DROP VIEW IF EXISTS vw_funcionario_completo;
+
+DROP TABLE IF EXISTS tb_log;
+DROP TABLE IF EXISTS tb_contato;
+DROP TABLE IF EXISTS tb_endereco;
+DROP TABLE IF EXISTS tb_funcionario;
+DROP TABLE IF EXISTS tb_cargo;
+DROP TABLE IF EXISTS tb_departamento;
+DROP TABLE IF EXISTS tb_usuario;
+
+DROP ROLE IF EXISTS colaborador;
+DROP ROLE IF EXISTS admin;
+
+
+
+CREATE TABLE tb_usuario (
+    id SERIAL PRIMARY KEY,
+    nome_completo VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    senha VARCHAR(100) NOT NULL
+);
+
+
+CREATE TABLE tb_departamento (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE tb_cargo (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    id_departamento INT NOT NULL,
+    CONSTRAINT fk_cargo_departamento
+        FOREIGN KEY (id_departamento)
+        REFERENCES tb_departamento(id)
+);
+
+CREATE TABLE tb_funcionario (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    idade INT NOT NULL,
+    salario NUMERIC(10,2) NOT NULL,
+    data_entrada DATE NOT NULL,
+    data_saida DATE,
+    id_cargo INT NOT NULL,
+    CONSTRAINT fk_funcionario_cargo
+        FOREIGN KEY (id_cargo)
+        REFERENCES tb_cargo(id),
+    CONSTRAINT chk_idade CHECK (idade BETWEEN 18 AND 75)
+);
+
+CREATE TABLE tb_endereco (
+    id SERIAL PRIMARY KEY,
+    rua VARCHAR(150) NOT NULL,
+    numero VARCHAR(10),
+    bairro VARCHAR(100),
+    cep VARCHAR(10),
+    cidade VARCHAR(100) NOT NULL,
+    estado VARCHAR(100) NOT NULL,
+    id_funcionario INT NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_endereco_funcionario
+        FOREIGN KEY (id_funcionario)
+        REFERENCES tb_funcionario(id)
+);
+
+CREATE TABLE tb_contato (
+    id SERIAL PRIMARY KEY,
+    telefone VARCHAR(20),
+    email VARCHAR(150),
+    id_funcionario INT NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_contato_funcionario
+        FOREIGN KEY (id_funcionario)
+        REFERENCES tb_funcionario(id)
+);
+
+CREATE TABLE tb_log (
+    id SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_funcionario INT NOT NULL,
+    acao VARCHAR(100) NOT NULL,
+    data_hora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_log_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES tb_usuario(id),
+
+    CONSTRAINT fk_log_funcionario
+        FOREIGN KEY (id_funcionario)
+        REFERENCES tb_funcionario(id)
+);
+
+--Procedures
+
+CREATE OR REPLACE PROCEDURE sp_cadastrar_funcionario_completo(
+    p_nome VARCHAR,
+    p_idade INT,
+    p_salario NUMERIC,
+    p_data_entrada DATE,
+    p_id_cargo INT,
+    p_rua VARCHAR,
+    p_numero VARCHAR,
+    p_bairro VARCHAR,
+    p_cep VARCHAR,
+    p_cidade VARCHAR,
+    p_estado VARCHAR,
+    p_telefone VARCHAR,
+    p_email VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_funcionario INT;
+BEGIN
+    INSERT INTO tb_funcionario (nome, idade, salario, data_entrada, id_cargo)
+    VALUES (p_nome, p_idade, p_salario, p_data_entrada, p_id_cargo)
+    RETURNING id INTO v_id_funcionario;
+
+    INSERT INTO tb_endereco
+        (rua, numero, bairro, cep, cidade, estado, id_funcionario, ativo)
+    VALUES
+        (p_rua, p_numero, p_bairro, p_cep, p_cidade, p_estado, v_id_funcionario, TRUE);
+
+    INSERT INTO tb_contato
+        (telefone, email, id_funcionario, ativo)
+    VALUES
+        (p_telefone, p_email, v_id_funcionario, TRUE);
+END $$;
+
+
+
+
+CREATE OR REPLACE PROCEDURE sp_desligar_funcionario(
+    p_id_funcionario INT,
+    p_id_usuario INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_data_saida DATE;
+BEGIN
+    -- Verifica se já está desligado
+    SELECT data_saida
+    INTO v_data_saida
+    FROM tb_funcionario
+    WHERE id = p_id_funcionario;
+
+    IF v_data_saida IS NOT NULL THEN
+        RAISE EXCEPTION 'Funcionário já está desligado.';
+    END IF;
+
+    -- Atualiza data de saída
+    UPDATE tb_funcionario
+    SET data_saida = CURRENT_DATE
+    WHERE id = p_id_funcionario;
+
+    -- Inativa endereços
+    UPDATE tb_endereco
+    SET ativo = FALSE
+    WHERE id_funcionario = p_id_funcionario;
+
+    -- Inativa contatos
+    UPDATE tb_contato
+    SET ativo = FALSE
+    WHERE id_funcionario = p_id_funcionario;
+
+    -- Log
+    INSERT INTO tb_log (id_usuario, id_funcionario, acao)
+    VALUES (
+        p_id_usuario,
+        p_id_funcionario,
+        'DESLIGAMENTO DE FUNCIONÁRIO'
+    );
+END;
+$$;
+
+
+--Views
+
+CREATE OR REPLACE VIEW vw_funcionario_completo AS
+SELECT 
+    f.id AS id_funcionario,
+    f.nome AS funcionario,
+    f.idade,
+    f.salario,
+    f.data_entrada,
+    f.data_saida,
+    c.nome AS cargo,
+    d.nome AS departamento,
+    e.rua,
+    e.numero,
+    e.bairro,
+    e.cep,
+    e.cidade,
+    e.estado,
+    co.telefone,
+    co.email
+FROM tb_funcionario f
+JOIN tb_cargo c ON f.id_cargo = c.id
+JOIN tb_departamento d ON c.id_departamento = d.id
+LEFT JOIN tb_endereco e ON e.id_funcionario = f.id AND e.ativo = TRUE
+LEFT JOIN tb_contato co ON co.id_funcionario = f.id AND co.ativo = TRUE;
+
+
+CREATE MATERIALIZED VIEW vw_estatisticas_departamento AS
+SELECT
+    d.id AS id_departamento,
+    d.nome AS departamento_nome,
+    COUNT(f.id) AS total_funcionarios,
+    COALESCE(AVG(f.salario), 0) AS salario_medio,
+    COALESCE(MAX(f.salario), 0) AS maior_salario,
+    COALESCE(MIN(f.salario), 0) AS menor_salario
+FROM tb_departamento d
+LEFT JOIN tb_cargo c ON c.id_departamento = d.id
+LEFT JOIN tb_funcionario f ON f.id_cargo = c.id
+GROUP BY d.id, d.nome
+ORDER BY d.nome;
+
+--Functions/triggers
+
+CREATE OR REPLACE FUNCTION trg_log_funcionario_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+    
+	INSERT INTO tb_log (id_usuario, id_funcionario, acao)
+	VALUES (1, NEW.id, 'INSERÇÃO DE FUNCIONÁRIO');
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_log_funcionario_insert
+AFTER INSERT ON tb_funcionario
+FOR EACH ROW
+EXECUTE FUNCTION trg_log_funcionario_insert();
+
+--
+
+CREATE OR REPLACE FUNCTION trg_validar_salario()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.salario < 0 THEN
+        RAISE EXCEPTION 'Salário não pode ser negativo.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_validar_salario
+BEFORE INSERT OR UPDATE ON tb_funcionario
+FOR EACH ROW
+EXECUTE FUNCTION trg_validar_salario();
+
+--function escalar
+CREATE OR REPLACE FUNCTION fn_total_funcionarios_departamento(p_id_departamento INT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_total INT;
+BEGIN
+    SELECT COUNT(f.id)
+    INTO v_total
+    FROM tb_funcionario f
+    JOIN tb_cargo c ON f.id_cargo = c.id
+    WHERE c.id_departamento = p_id_departamento;
+
+    RETURN v_total;
+END;
+$$;
+
+--function table
+CREATE OR REPLACE FUNCTION fn_funcionarios_por_departamento(p_id_departamento INT)
+RETURNS TABLE (
+    id_funcionario INT,
+    nome VARCHAR,
+    cargo VARCHAR,
+    salario NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        f.id,
+        f.nome,
+        c.nome,
+        f.salario
+    FROM tb_funcionario f
+    JOIN tb_cargo c ON f.id_cargo = c.id
+    WHERE c.id_departamento = p_id_departamento
+      AND f.data_saida IS NULL;
+END;
+$$;
+
+
+--Roles
+
+CREATE ROLE admin
+LOGIN
+PASSWORD 'admin123';
+
+GRANT ALL PRIVILEGES ON DATABASE postgres TO admin;
+GRANT ALL ON SCHEMA public TO admin;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO admin;
+
+--role colaborador
+
+CREATE ROLE colaborador
+LOGIN
+PASSWORD 'colab123';
+
+
+GRANT USAGE ON SCHEMA public TO colaborador;
+
+GRANT SELECT ON
+    tb_usuario,
+    tb_departamento,
+    tb_cargo,
+    tb_funcionario,
+    tb_endereco,
+    tb_contato,
+    tb_log
+TO colaborador;
+
+GRANT SELECT ON
+    vw_funcionario_completo,
+    vw_estatisticas_departamento
+TO colaborador;
+
+GRANT INSERT ON
+    tb_funcionario,
+    tb_endereco,
+    tb_contato,
+    tb_log
+TO colaborador;
+
+GRANT UPDATE (rua, numero, bairro, cep, cidade, estado, ativo)
+ON tb_endereco
+TO colaborador;
+
+GRANT UPDATE (telefone, email, ativo)
+ON tb_contato
+TO colaborador;
+
+GRANT EXECUTE ON PROCEDURE sp_cadastrar_funcionario_completo TO colaborador;
+GRANT EXECUTE ON PROCEDURE sp_desligar_funcionario TO colaborador;
+
+GRANT EXECUTE ON FUNCTION fn_total_funcionarios_departamento(INT) TO colaborador;
+GRANT EXECUTE ON FUNCTION fn_funcionarios_por_departamento(INT) TO colaborador;
+
+
+
+--TESTES
+
+--preparacao
+INSERT INTO tb_usuario (nome_completo, email, senha)
+VALUES ('Admin Teste', 'admin@teste.com', '123');
+
+--teste procedure cadastro completo
+
+INSERT INTO tb_departamento (nome) VALUES
+('Recursos Humanos'), ('Tecnologia'), ('Financeiro');
+
+INSERT INTO tb_cargo (nome, id_departamento) VALUES
+('Analista de RH', 1),
+('Programador Java', 2),
+('Contador', 3);
+
+select * from tb_departamento;
+select * from tb_cargo;
+
+CALL sp_cadastrar_funcionario_completo(
+    'Henrique Pivetti', 20, 3500.00, '2022-01-10', 1,
+    'Rua das Flores', '120', 'Centro', '85555-000', 'Palmas', 'Paraná',
+    '(46) 99999-1111', 'shaolinmatadordeporco@gmail.com'
+);
+
+CALL sp_cadastrar_funcionario_completo(
+    'João da Silva', 30,4200.00, CURRENT_DATE, 1,
+    'Rua A', '10','Centro', '80000-000', 'Curitiba', 'PR',
+    '(41) 99999-0000', 'joao@email.com'
+);
+
+SELECT * FROM tb_funcionario;
+SELECT * FROM tb_endereco;
+SELECT * FROM tb_contato;
+SELECT * FROM tb_log;
+
+
+--teste trigger before validacao salario 
+INSERT INTO tb_funcionario (nome, idade, salario, data_entrada, id_cargo)
+VALUES ('Teste Erro', 25, -1000, CURRENT_DATE, 1);
+
+--teste procedure de desligamento de funcionario
+CALL sp_desligar_funcionario(1, 1);
+
+SELECT id, data_saida FROM tb_funcionario WHERE id = 1;
+SELECT ativo FROM tb_endereco WHERE id_funcionario = 1;
+SELECT ativo FROM tb_contato WHERE id_funcionario = 1;
+SELECT * FROM tb_log WHERE id_funcionario = 1;
+
+--teste view
+SELECT * FROM vw_funcionario_completo;
+
+--teste materialized view
+SELECT * FROM vw_estatisticas_departamento;
+
+--teste function escalar
+SELECT fn_total_funcionarios_departamento(1);
+
+
+--teste roles
+SET ROLE colaborador;
+
+SELECT * FROM tb_usuario; --precisa funcionar
+INSERT INTO tb_departamento VALUES ('Teste'); --precisa dar erro
+
+RESET ROLE;
