@@ -6,6 +6,10 @@ O projeto foi desenvolvido com uma arquitetura organizada, separando claramente 
 
 ---
 
+## Vídeo do projeto: https://youtu.be/Lr13XIryfu0?si=syAwGY10Y424aELo
+
+---
+
 ## 🧠 Objetivo do Projeto
 
 O objetivo do sistema é simular um **sistema real de RH**, permitindo:
